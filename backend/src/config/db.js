@@ -1,7 +1,6 @@
 const { Sequelize } = require('sequelize');
 
-
-const sequelize = new Sequelize(process.env.PGDATABASE, process.env.PGUSER, process.env.PGPASSWORD, {
+const centralSequelize = new Sequelize(process.env.PGDATABASE, process.env.PGUSER, process.env.PGPASSWORD, {
     host: process.env.PGHOST,
     port: process.env.PGPORT,
     dialect: 'postgres',
@@ -9,7 +8,7 @@ const sequelize = new Sequelize(process.env.PGDATABASE, process.env.PGUSER, proc
 });
 
 // Test the connection
-sequelize.authenticate()
+centralSequelize.authenticate()
     .then(() => {
         console.log('Connection to PostgreSQL has been established successfully.');
     })
@@ -17,4 +16,4 @@ sequelize.authenticate()
         console.error('Unable to connect to the database:', err);
     });
 
-module.exports = sequelize;
+module.exports = centralSequelize;

@@ -1,36 +1,30 @@
-import React from "react";
-import {Card, CardHeader, CardBody, CardFooter, Divider, Link, Image} from "@nextui-org/react";
-
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './pages/Home';
+import ProductFormPage from './pages/ProductForm';
+import ProductListPage from './pages/ProductList';
+import ProductDetails from './components/ProductDetails';
+import Layout from './components/Layout';
+import VariantList from './components/VariantList';
+import VariantForm from './components/VariantForm';
+import BarcodeGenerator from "./components/Barcode"
 export default function App() {
   return (
-    <Card className="max-w-[400px]">
-      <CardHeader className="flex gap-3">
-        <Image
-          alt="nextui logo"
-          height={40}
-          radius="sm"
-          src="https://avatars.githubusercontent.com/u/86160567?s=200&v=4"
-          width={40}
-        />
-        <div className="flex flex-col">
-          <p className="text-md">NextUI</p>
-          <p className="text-small text-default-500">nextui.org</p>
-        </div>
-      </CardHeader>
-      <Divider/>
-      <CardBody>
-        <p>Make beautiful websites regardless of your design experience.</p>
-      </CardBody>
-      <Divider/>
-      <CardFooter>
-        <Link
-          isExternal
-          showAnchorIcon
-          href="https://github.com/nextui-org/nextui"
-        >
-          Visit source code on GitHub.
-        </Link>
-      </CardFooter>
-    </Card>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductListPage />} />
+          <Route path="/add-product" element={<ProductFormPage />} />
+          <Route path="/variants" element={<VariantList />} />
+          <Route path="/barcode" element={<BarcodeGenerator />} />
+
+          <Route path="/products/:productId" element={<ProductDetails />} />
+          <Route path="/products/add-products" element={<ProductFormPage />} />
+          <Route path="/variants/add-variants" element={<VariantForm />} />
+
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
