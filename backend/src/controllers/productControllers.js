@@ -1,14 +1,11 @@
-const express = require('express');
-const productRouter = express.Router();
 const Product = require('../models/Product');
-const Variant = require('../models/Variant'); // Import Variant model
+const Variant = require('../models/Variant');
 
-// Create a new product
-const createProduct= async (req, res) => {
+const createProduct = async (req, res) => {
   try {
-    const { name, description, price, stock, category, company, brand, variants } = req.body;
+    const { productname, description, price, stock, category, company, brand, variants } = req.body;
     const newProduct = await Product.create({
-      name,
+      productname,
       description,
       price,
       stock,
@@ -17,11 +14,8 @@ const createProduct= async (req, res) => {
       brand,
     });
 
-    // Create variants if provided
     if (variants && variants.length > 0) {
-      for (let variant of variants) {
-        await Variant.create({ ...variant, productId: newProduct.productId });
-      }
+      await Variant.bulkCreate(variants.map(variant => ({ ...variant, productId: newProduct.productId })));
     }
 
     const productWithVariants = await Product.findByPk(newProduct.productId, {
@@ -33,27 +27,25 @@ const createProduct= async (req, res) => {
     console.error('Error creating product:', error);
     res.status(500).json({ error: 'Error creating product' });
   }
-}
+};
 
-// Get all products
-const getAllProducts= async (req, res) => {
+const getAllProducts = async (req, res) => {
   try {
     const products = await Product.findAll({
-      include: [{ model: Variant, as: 'variants' }] // Include variants in response
+      include: [{ model: Variant, as: 'variants' }]
     });
     res.json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ error: 'Error fetching products' });
   }
-}
+};
 
-// Get a single product by ID
-const getProductById= async (req, res) => {
+const getProductById = async (req, res) => {
   const productId = req.params.id;
   try {
     const product = await Product.findByPk(productId, {
-      include: [{ model: Variant, as: 'variants' }] // Include variants in response
+      include: [{ model: Variant, as: 'variants' }]
     });
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
@@ -63,18 +55,17 @@ const getProductById= async (req, res) => {
     console.error('Error fetching product:', error);
     res.status(500).json({ error: 'Error fetching product' });
   }
-}
+};
 
-// Update a product
-const updateProduct= async (req, res) => {
+const updateProduct = async (req, res) => {
   const productId = req.params.id;
   try {
     const [updated] = await Product.update(req.body, {
-      where: { productId: productId }
+      where: { productId }
     });
     if (updated) {
       const updatedProduct = await Product.findByPk(productId, {
-        include: [{ model: Variant, as: 'variants' }] // Include variants in response
+        include: [{ model: Variant, as: 'variants' }]
       });
       res.json(updatedProduct);
     } else {
@@ -84,14 +75,13 @@ const updateProduct= async (req, res) => {
     console.error('Error updating product:', error);
     res.status(500).json({ error: 'Error updating product' });
   }
-}
+};
 
-// Delete a product
-const deleteProduct= async (req, res) => {
+const deleteProduct = async (req, res) => {
   const productId = req.params.id;
   try {
     const deleted = await Product.destroy({
-      where: { productId: productId }
+      where: { productId }
     });
     if (deleted) {
       res.json({ message: 'Product deleted successfully' });
@@ -102,7 +92,12 @@ const deleteProduct= async (req, res) => {
     console.error('Error deleting product:', error);
     res.status(500).json({ error: 'Error deleting product' });
   }
-}
+};
 
-
-module.exports = {createProduct,getAllProducts,getProductById,updateProduct,deleteProduct}
+module.exports = {
+  createProduct,
+  getAllProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct
+};

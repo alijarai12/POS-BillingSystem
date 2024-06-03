@@ -4,7 +4,7 @@ import { Button, Card, Input, Textarea } from "@nextui-org/react";
 
 const ProductForm = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    productname: "",
     description: "",
     SKU: "",
     price: "",
@@ -20,7 +20,13 @@ const ProductForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === "company") {
+      // Generate SKU when company name changes
+      const sku = generateSKU(value);
+      setFormData({ ...formData, [name]: value, SKU: sku });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -29,11 +35,14 @@ const ProductForm = () => {
     setError(null);
 
     try {
-      const response = await axios.post("/api/products", formData); // Adjust the URL to your API endpoint
+      const response = await axios.post(
+        "http://localhost:5000/api/products",
+        formData
+      ); // Adjust the URL to your API endpoint
       console.log("Product added:", response.data);
       setSuccess(true);
       setFormData({
-        name: "",
+        productname: "",
         description: "",
         SKU: "",
         price: 0,
@@ -50,10 +59,34 @@ const ProductForm = () => {
     }
   };
 
+  const generateSKU = (company) => {
+    const prefix = company.substring(0, 3).toUpperCase();
+    const timestamp = Date.now().toString().slice(-5);
+    return `${prefix}-${timestamp}`;
+  };
+
+  const formFields = [
+    { id: "productname", label: "Product Name", type: "text", required: true },
+    { id: "description", label: "Description", type: "textarea" },
+    { id: "SKU", label: "SKU", type: "text" },
+    {
+      id: "price",
+      label: "Price",
+      type: "number",
+      required: true,
+      min: "0",
+      step: "0.01",
+    },
+    { id: "stock", label: "Stock", type: "number", required: true, min: "0" },
+    { id: "category", label: "Category", type: "text", required: true },
+    { id: "brand", label: "Brand", type: "text" },
+    { id: "company", label: "Company", type: "text", required: true },
+  ];
+
   return (
     <div className="flex items-start justify-center min-h-screen bg-gray-100 p-4">
       <form
-        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md fade-in mt-2" 
+        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md fade-in mt-2"
         onSubmit={handleSubmit}
       >
         <h2 className="text-2xl font-bold mb-6 text-violet-800 text-center">
@@ -64,140 +97,37 @@ const ProductForm = () => {
           <div className="mb-4 text-green-500">Product added successfully!</div>
         )}
 
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-gray-700 font-bold mb-2">
-            Product Name
-          </label>
-          <Input
-            type="text"
-            id="name"
-            label="Product Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label
-            htmlFor="description"
-            className="block text-gray-700 font-bold mb-2"
-          >
-            Description
-          </label>
-          <Textarea
-            id="description"
-            name="description"
-            label="Description"
-            value={formData.description}
-            onChange={handleChange}
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          ></Textarea>
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="SKU" className="block text-gray-700 font-bold mb-2">
-            SKU
-          </label>
-          <Input
-            type="text"
-            id="SKU"
-            name="SKU"
-            label="SKU"
-            value={formData.SKU}
-            onChange={handleChange}
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="price" className="block text-gray-700 font-bold mb-2">
-            Price
-          </label>
-          <Input
-            type="number"
-            id="price"
-            label="Price"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="stock" className="block text-gray-700 font-bold mb-2">
-            Stock
-          </label>
-          <Input
-            type="number"
-            id="stock"
-            name="stock"
-            value={formData.stock}
-            onChange={handleChange}
-            required
-            min="0"
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label
-            htmlFor="category"
-            className="block text-gray-700 font-bold mb-2"
-          >
-            Category
-          </label>
-          <Input
-            type="text"
-            id="category"
-            label="Category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            required
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="brand" className="block text-gray-700 font-bold mb-2">
-            Brand
-          </label>
-          <Input
-            type="text"
-            id="brand"
-            label="Brand"
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label
-            htmlFor="company"
-            className="block text-gray-700 font-bold mb-2"
-          >
-            Company
-          </label>
-          <Input
-            type="text"
-            id="company"
-            name="company"
-            label="Company"
-            value={formData.company}
-            onChange={handleChange}
-            required
-            // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        {formFields.map(({ id, label, type, required, min, step }) => (
+          <div className="mb-4" key={id}>
+            <label htmlFor={id} className="block text-gray-700 font-bold mb-2">
+              {label}
+            </label>
+            {type === "textarea" ? (
+              <Textarea
+                id={id}
+                name={id}
+                label={label}
+                value={formData[id]}
+                onChange={handleChange}
+                required={required}
+                // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <Input
+                type={type}
+                id={id}
+                name={id}
+                label={label}
+                value={formData[id]}
+                onChange={handleChange}
+                required={required}
+                min={min}
+                step={step}
+                // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            )}
+          </div>
+        ))}
 
         <div className="flex items-center justify-between">
           <Button
@@ -210,9 +140,7 @@ const ProductForm = () => {
           </Button>
         </div>
       </form>
-     
     </div>
-  
   );
 };
 

@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { Button, Card } from "@nextui-org/react";
 import { FaShoppingCart } from "react-icons/fa";
 import VariantForm from "./VariantForm";
-import { MdDelete } from "react-icons/md";
-import { RiEdit2Fill } from "react-icons/ri";
+
+import EditProducts from "./EditProducts";
+import Barcode from "react-barcode";
+import ReactToPrint from "react-to-print";
+import EditVariants from "./EditVariants";
 
 const ProductDetails = () => {
   const params = useParams();
@@ -13,6 +16,7 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const barcodeRefs = useRef([]); // Ref for the barcode components
 
   useEffect(() => {
     fetchProductDetails();
@@ -40,6 +44,10 @@ const ProductDetails = () => {
     return <p>Error: {error}</p>;
   }
 
+  const generateBarcodeValue = (variant) => {
+    return `${variant.SKU}-${variant.price}`;
+  };
+
   return (
     <div>
       <div className="p-6 bg-white rounded-lg shadow-md flex flex-row gap-5">
@@ -47,13 +55,13 @@ const ProductDetails = () => {
           <img
             src="https://image-us.samsung.com/SamsungUS/configurator/060321/Configurator-01-Family-Shot-720x720_CNET.jpg"
             alt="samsung phone"
-            className="object-contain	"
+            className="object-contain"
           />
         </div>
         <div className="relative">
           {product && (
             <>
-              <h2 className="text-3xl font-bold mb-4">{product.name}</h2>{" "}
+              <h2 className="text-3xl font-bold mb-4">{product.productname}</h2>
               <p className="text-gray-700 mb-2">
                 Description: {product.description}
               </p>
@@ -73,26 +81,15 @@ const ProductDetails = () => {
                   Back to Product
                 </Button>
               </Link>
-              <VariantForm productId={pid} initialSKU={product.SKU} />
+              <VariantForm
+                productId={pid}
+                initialSKU={product.SKU}
+                generateBarcodeValue={generateBarcodeValue}
+              />
             </>
           )}
-          <div className="">
-            <Button
-              color="secondary"
-              variant="bordered"
-              startContent={<RiEdit2Fill />}
-              className="mr-2 hover:bg-purple-700 hover:text-white transition-colors duration-300 ease-in-out"
-            >
-              Edit
-            </Button>
-            <Button
-              color="danger"
-              variant="bordered"
-              startContent={<MdDelete />}
-              className=" hover:bg-red-600 hover:text-white transition-colors duration-300 ease-in-out"
-            >
-              Delete
-            </Button>
+          <div>
+            <EditProducts productId={pid} initialSKU={product.SKU} />
           </div>
         </div>
       </div>
@@ -101,7 +98,7 @@ const ProductDetails = () => {
           <div>
             <h2 className="text-3xl font-bold mb-4 text-center">Variants:</h2>
             <div className="grid grid-cols-3 gap-4">
-              {product.variants.map((variant) => (
+              {product.variants.map((variant, index) => (
                 <Card
                   key={variant.variantId}
                   className="col-span-1 p-4 border rounded transition-transform transform hover:scale-105 hover:shadow-lg ease-in-out duration-300"
@@ -109,27 +106,33 @@ const ProductDetails = () => {
                   <ul>
                     <li className="p-4">
                       <p>Name: {variant.name}</p>
+                      <p>VariantID: {variant.variantId}</p>
                       <p>Value: {variant.value}</p>
                       <p>SKU: {variant.SKU}</p>
                       <p>Price: ${variant.price}</p>
                       <p>Stock: {variant.stock}</p>
+                      <p>Size: {variant.size}</p>
+                      <p>Barcode: {variant.barcode}</p>
+
+                      <Barcode
+                        value={generateBarcodeValue(variant)}
+                        ref={(el) => (barcodeRefs.current[index] = el)} // Assigning ref to Barcode component
+                        width={1}
+                        height={40}
+                      />
+
                       <div className="flex justify-between mt-4">
-                        <Button
-                          color="secondary"
-                          variant="bordered"
-                          startContent={<RiEdit2Fill />}
-                          className=" hover:bg-purple-700 hover:text-white transition-colors duration-300 ease-in-out"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          color="danger"
-                          variant="bordered"
-                          startContent={<MdDelete />}
-                          className=" hover:bg-red-600 hover:text-white transition-colors duration-300 ease-in-out"
-                        >
-                          Delete
-                        </Button>
+                        <ReactToPrint
+                          trigger={() => <Button>Print Barcode</Button>}
+                          content={() => barcodeRefs.current[index]} // Passing the ref to the content prop
+                        />
+                     
+                        <EditVariants
+                          variantId={variant.variantId}
+                          productId={pid}
+                          generateBarcodeValue={generateBarcodeValue}
+                        />
+                  
                       </div>
                     </li>
                   </ul>

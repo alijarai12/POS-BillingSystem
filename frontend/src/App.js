@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import VariantList from './components/VariantList';
 import VariantForm from './components/VariantForm';
 import BarcodeGenerator from "./components/Barcode"
+import AddBulk from './components/AddBulk';
 export default function App() {
   return (
     <Router>
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/products/:productId" element={<ProductDetails />} />
           <Route path="/products/add-products" element={<ProductFormPage />} />
           <Route path="/variants/add-variants" element={<VariantForm />} />
+          <Route path="/products/add-bulk" element={<AddBulk />} />
 
         </Routes>
       </Layout>

@@ -1,49 +1,4 @@
-// import React, { useState } from 'react';
-// import { Link } from 'react-router-dom';
-// import { FaBox, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
-// const Sidebar = () => {
-//   const [isProductsOpen, setProductsOpen] = useState(false);
-
-//   const toggleProducts = () => {
-//     setProductsOpen(!isProductsOpen);
-//   };
-
-//   return (
-//     <div className=" bg-purple-500 text-white w-64 p-4">
-//       <h2 className="text-3xl font-bold mb-6">Navigation</h2>
-//       <ul className="space-y-4">
-//         <li className="group">
-//           <button
-//             onClick={toggleProducts}
-//             className="flex items-center justify-between w-full py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300"
-//           >
-//             <span className="flex items-center">
-//               <FaBox className="mr-3" />
-//               Products
-//             </span>
-//             {isProductsOpen ? <FaChevronUp /> : <FaChevronDown />}
-//           </button>
-//           {isProductsOpen && (
-//             <ul className="mt-2 space-y-2 ml-6">
-//               <li>
-//                 <Link to="/products/category1" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Category 1</Link>
-//               </li>
-//               <li>
-//                 <Link to="/products/category2" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Category 2</Link>
-//               </li>
-//               <li>
-//                 <Link to="/products/category3" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Category 3</Link>
-//               </li>
-//             </ul>
-//           )}
-//         </li>
-//       </ul>
-//     </div>
-//   );
-// };
-
-// export default Sidebar;
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaBox, FaChevronDown, FaChevronUp, FaUsers, FaBarcode, FaDollarSign } from 'react-icons/fa';
@@ -106,6 +61,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               </li>
               <li>
                 <Link to="/variants/add-variants" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Add Variants</Link>
+              </li>
+              <li>
+                <Link to="/products/add-bulk" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Add Bulk Products</Link>
               </li>
             </ul>
           )}

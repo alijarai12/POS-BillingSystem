@@ -1,0 +1,4 @@
+productname,description,SKU,price,stock,category,brand,company,createdAt,updatedAt,variantName,value,VarinatSKU,variantprice,variantstock,variantbarcode,image ,weight,length,width,height,attributes,variantSize
+T-Shirt,Comfortable cotton t-shirt,,19.99,100,Clothing,XYZ Apparel,XYZ Inc.,,,Color,Red,,1500,300,,,,,,,,Large
+T-Shirt,Comfortable cotton t-shirt,,19.99,100,Clothing,XYZ Apparel,XYZ Inc.,,,Color,White,,1500,100,,,,,,,,Large
+T-Shirt,Comfortable cotton t-shirt,,19.99,100,Clothing,XYZ Apparel,XYZ Inc.,,,Color,Blue,,1500,50+T4,,,,,,,,Medium
