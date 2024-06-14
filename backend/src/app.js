@@ -1,12 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./config/db');
-
-
 // Import routes
 const userRoutes = require('./routes/authRoutes');
-
-
+const billRoutes = require('./routes/billRoutes');
+const taxRoutes = require('./routes/taxRoutes');
+const productRoutes = require('./routes/productRoutes');
+const variantRoutes= require('./routes/variantRoutes');
+const discountRoutes= require('./routes/discountRoutes');
 const app = express();
 
 // Middleware
@@ -18,6 +19,13 @@ app.use(express.json());
 
 // Use routes
 app.use('/api/user', userRoutes);// Prefixing routes with /api
+
+app.use('/api',billRoutes);
+app.use('/api', taxRoutes);
+app.use('/api', productRoutes);
+app.use('/api',variantRoutes);
+app.use('/api',discountRoutes);
+
 
 
 
