@@ -1,21 +1,45 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import PrintComponent from "./PrintPage";
+import { useLocation } from "react-router-dom"; // Assuming this is the correct path
 
 const BillPage = () => {
   const [bills, setBills] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const componentRefs = useRef({});
+  const [shouldPrint, setShouldPrint] = useState(false);
+  const location = useLocation(); // Import useLocation from 'react-router-dom'
+
+  useEffect(() => {
+    if (location.state && location.state.fromCart) {
+      setShouldPrint(true);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (shouldPrint) {
+      const latestBill = bills[0];
+      if (latestBill) {
+        const billRef = componentRefs.current[latestBill.id];
+        if (billRef && billRef.handlePrint) {
+          billRef.handlePrint();
+        }
+      }
+    }
+  }, [shouldPrint, bills]);
 
   useEffect(() => {
     const fetchBills = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/bills");
-        setBills(response.data);
+        setBills(response.data.reverse()); // Reverse the array to show latest bills first
       } catch (error) {
         setError("Error fetching bills. Please try again later.");
         console.error("Error fetching bills:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -56,7 +80,9 @@ const BillPage = () => {
         />
       </div>
       {error && <p className="text-red-500">{error}</p>}
-      {filteredBills.length === 0 ? (
+      {loading ? (
+        <p>Loading...</p>
+      ) : filteredBills.length === 0 ? (
         <p>No bills found.</p>
       ) : (
         <div className="overflow-x-auto">
@@ -70,7 +96,7 @@ const BillPage = () => {
                   Customer Name
                 </th>
                 <th className="py-2 px-4 border-b-2 border-gray-300 text-left">
-                  Customer Number
+                  Customer Phone Number
                 </th>
                 <th className="py-2 px-4 border-b-2 border-gray-300 text-left">
                   Address

@@ -2,8 +2,8 @@ import React, { useContext, useState, useEffect } from "react";
 import { CartContext } from "../context/CartContext";
 import { FaTrash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
-import Modal from "./CartModal";
 import axios from "axios";
+import CartModal from "./CartModal";
 
 const CartPage = () => {
   const { cart, clearCart, addToCart, removeFromCart } =
@@ -12,117 +12,90 @@ const CartPage = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [subtotal, setSubtotal] = useState(0);
-  const [total, setTotal] = useState(0);
   const [taxRates, setTaxRates] = useState([]);
   const [includeTax, setIncludeTax] = useState(true);
   const [variants, setVariants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const fetchVariants = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/variants`);
-      setVariants(response.data);
-      setLoading(false);
-    } catch (error) {
-      setError("Failed to fetch variants");
-      console.error("There was an error fetching the variants!", error);
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchVariants = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/variants`);
+        setVariants(response.data);
+      } catch (error) {
+        setError("Failed to fetch variants");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchVariants();
-  }, [setVariants]);
+    fetchTaxRatesFromServer();
+  }, []);
 
   useEffect(() => {
-    fetchTaxRatesFromServer(); // Fetch tax rates on component mount
     calculateSubtotal();
   }, [cart]);
 
-  const fetchTaxRates = async () => {
+  const fetchTaxRatesFromServer = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/taxes"); // Adjust the URL to your backend endpoint for fetching tax rates
-      return response.data; // Assuming tax rates are returned as an array or object
+      const response = await axios.get("http://localhost:5000/api/taxes");
+      setTaxRates(response.data);
     } catch (error) {
       console.error("Error fetching tax rates:", error);
-      return []; // Return an empty array or handle the error as needed
     }
-  };
-
-  const fetchTaxRatesFromServer = async () => {
-    const fetchedTaxRates = await fetchTaxRates();
-    setTaxRates(fetchedTaxRates);
   };
 
   const calculateSubtotal = () => {
-    let subtotalAmount = 0;
-    cart.forEach((item) => {
-      subtotalAmount += item.price * item.quantity;
-    });
+    const subtotalAmount = cart.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
     setSubtotal(subtotalAmount);
-    setTotal(subtotalAmount); // In this case, total is the same as subtotal, you can adjust this calculation as needed
   };
 
   const calculateTaxAmount = () => {
-    if (!includeTax) {
-      return 0; // Return 0 if tax is excluded
-    }
-
-    let taxAmount = 0;
-    taxRates.forEach((tax) => {
+    if (!includeTax) return 0;
+    return taxRates.reduce((acc, tax) => {
       if (tax.type === "percentage") {
-        taxAmount += (subtotal * tax.rate) / 100;
+        return acc + (subtotal * tax.rate) / 100;
       } else if (tax.type === "fixed") {
-        taxAmount += tax.rate;
+        return acc + tax.rate;
       }
-    });
-    return taxAmount;
+      return acc;
+    }, 0);
   };
 
-  const handleTaxToggle = () => {
-    setIncludeTax((prevState) => !prevState);
+  const handleTaxToggle = () => setIncludeTax(!includeTax);
+
+  const updateVariantStock = async (variantId, quantity) => {
+    const variant = variants.find((v) => v.variantId === variantId);
+    if (variant) {
+      await axios.put(`http://localhost:5000/api/variants/${variantId}`, {
+        stock: variant.stock + quantity,
+      });
+      setVariants((prevVariants) =>
+        prevVariants.map((v) =>
+          v.variantId === variantId ? { ...v, stock: v.stock + quantity } : v
+        )
+      );
+    }
   };
 
   const handleClearCart = async () => {
     try {
-      // Update the stock for all variants in the cart
-      const updatedVariants = variants.map((variant) => {
-        const cartItem = cart.find(
-          (item) => item.variantId === variant.variantId
-        );
-        if (cartItem) {
-          return { ...variant, stock: variant.stock + cartItem.quantity };
-        }
-        return variant;
-      });
-
-      // Update the stock in the database
-      const promises = updatedVariants.map((variant) =>
-        axios.put(`http://localhost:5000/api/variants/${variant.variantId}`, {
-          stock: variant.stock,
-        })
+      await Promise.all(
+        cart.map((item) => updateVariantStock(item.variantId, item.quantity))
       );
-      await Promise.all(promises);
-
-      // Update the local state with the new stock values
-      setVariants(updatedVariants);
-
-      // Update local storage with updated stock
-      localStorage.setItem("variants", JSON.stringify(updatedVariants));
-
-      // Clear the cart
       clearCart();
     } catch (error) {
-      console.error("There was an error updating the stock!", error);
+      console.error("Error clearing cart:", error);
     }
   };
-  const handleGenerateBill = () => {
-    setModalVisible(true);
-  };
 
-  const handleCloseModal = () => {
-    setModalVisible(false);
-  };
+  const handleGenerateBill = () => setModalVisible(true);
+  const handleCloseModal = () => setModalVisible(false);
 
   const handleBillSubmit = async (billData) => {
     setIsLoading(true);
@@ -131,16 +104,17 @@ const CartPage = () => {
       ...billData,
       cartItems: cart,
       subTotal: subtotal,
-      tax: includeTax ? tax : 0, // Include tax only if includeTax is true
-      totalAmount: includeTax ? total + tax : total, // Include tax in the total amount if includeTax is true
+      tax: includeTax ? tax : 0,
+      totalAmount: includeTax ? subtotal + tax : subtotal,
       date: new Date(),
     };
 
     try {
-      await axios.post("http://localhost:5000/api/bills", bill); // Adjust the URL to your backend endpoint
+      await axios.post("http://localhost:5000/api/bills", bill);
       clearCart();
       setModalVisible(false);
-      navigate("/bill");
+
+      navigate("/bill", { state: { fromCart: true } });
     } catch (error) {
       console.error("Error generating bill:", error);
     } finally {
@@ -148,124 +122,30 @@ const CartPage = () => {
     }
   };
 
-  const handleDecrement = async (productId, variantId, currentQuantity) => {
-    if (currentQuantity > 1) {
-      try {
-        // Find the variant in the local state
-        const variant = variants.find((v) => v.variantId === variantId);
-
-        if (variant) {
-          // Update stock in the database
-          await axios.put(
-            `http://localhost:5000/api/variants/${variant.variantId}`,
-            {
-              stock: variant.stock + 1,
-            }
-          );
-
-          // Update the local state with the new stock value
-          const updatedVariants = variants.map((v) =>
-            v.variantId === variantId ? { ...v, stock: v.stock + 1 } : v
-          );
-          setVariants(updatedVariants);
-
-          // Update local storage with updated stock
-          localStorage.setItem("variants", JSON.stringify(updatedVariants));
-
-          // Update the cart quantity
-          handleQuantityChange(productId, variantId, -1);
-        }
-      } catch (error) {
-        console.error("There was an error updating the stock!", error);
-      }
+  const handleDecrement = async (item) => {
+    if (item.quantity > 1) {
+      await updateVariantStock(item.variantId, 1);
+      addToCart(item, -1);
     }
   };
 
-  const handleIncrement = async (productId, variantId) => {
-    try {
-      // Find the variant in the local state
-      const variant = variants.find((v) => v.variantId === variantId);
-
-      if (variant && variant.stock > 0) {
-        // Update stock in the database
-        await axios.put(
-          `http://localhost:5000/api/variants/${variant.variantId}`,
-          {
-            stock: variant.stock - 1,
-          }
-        );
-
-        // Update the local state with the new stock value
-        const updatedVariants = variants.map((v) =>
-          v.variantId === variantId ? { ...v, stock: v.stock - 1 } : v
-        );
-        setVariants(updatedVariants);
-
-        // Update local storage with updated stock
-        localStorage.setItem("variants", JSON.stringify(updatedVariants));
-
-        // Update the cart quantity
-        handleQuantityChange(productId, variantId, 1);
-      } else {
-        alert("Variant out of stock");
-      }
-    } catch (error) {
-      console.error("There was an error updating the stock!", error);
+  const handleIncrement = async (item) => {
+    const variant = variants.find((v) => v.variantId === item.variantId);
+    if (variant && variant.stock > 0) {
+      await updateVariantStock(item.variantId, -1);
+      addToCart(item, 1);
+    } else {
+      alert("Variant out of stock");
     }
   };
 
-  const handleRemoveItem = async (productId, variantId) => {
-    try {
-      // Find the variant in the local state
-      const variant = variants.find((v) => v.variantId === variantId);
-
-      if (variant) {
-        // Update stock in the database
-        await axios.put(
-          `http://localhost:5000/api/variants/${variant.variantId}`,
-          {
-            stock:
-              cart.find(
-                (item) => item.id === productId && item.variantId === variantId
-              ).quantity + variant.stock,
-          }
-        );
-
-        // Remove the item from the cart
-        removeFromCart(productId, variantId);
-
-        // Update the local state with the new stock value
-        const updatedVariants = variants.map((v) =>
-          v.variantId === variantId ? { ...v, stock: v.stock + 1 } : v
-        );
-        setVariants(updatedVariants);
-
-        // Update local storage with updated stock
-        localStorage.setItem("variants", JSON.stringify(updatedVariants));
-      }
-    } catch (error) {
-      console.error("There was an error updating the stock!", error);
-    }
+  const handleRemoveItem = async (item) => {
+    await updateVariantStock(item.variantId, item.quantity);
+    removeFromCart(item.id, item.variantId);
   };
 
-  const handleQuantityChange = (productId, variantId, quantity) => {
-    const product = cart.find(
-      (item) => item.id === productId && item.variantId === variantId
-    );
-    if (product) {
-      const newQuantity = product.quantity + quantity;
-      if (newQuantity > 0) {
-        addToCart(product, quantity);
-      }
-    }
-  };
-  if (loading) {
-    return <p>Loading...</p>;
-  }
-
-  if (error) {
-    return <p>Error: {error}</p>;
-  }
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="w-full mt-8 p-4 bg-white shadow-md rounded-lg">
@@ -297,16 +177,14 @@ const CartPage = () => {
                   </div>
                   <div className="w-1/6 flex items-center">
                     <button
-                      onClick={() =>
-                        handleDecrement(item.id, item.variantId, item.quantity)
-                      }
+                      onClick={() => handleDecrement(item)}
                       className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-1 px-2 rounded-l"
                     >
                       -
                     </button>
                     <span className="mx-2">{item.quantity}</span>
                     <button
-                      onClick={() => handleIncrement(item.id, item.variantId)}
+                      onClick={() => handleIncrement(item)}
                       className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-1 px-2 rounded-r"
                     >
                       +
@@ -315,10 +193,9 @@ const CartPage = () => {
                   <div className="w-1/6 text-gray-700">
                     ${(item.price * item.quantity).toFixed(2)}
                   </div>
-
                   <div className="w-1/6">
                     <button
-                      onClick={() => handleRemoveItem(item.id, item.variantId)}
+                      onClick={() => handleRemoveItem(item)}
                       className="text-red-500 hover:text-red-700"
                     >
                       <FaTrash />
@@ -378,7 +255,7 @@ const CartPage = () => {
                   <div className="text-xl font-bold flex justify-between">
                     <span>Total:</span>
                     <span className="text-gray-800">
-                      ${(total + calculateTaxAmount()).toFixed(2)}
+                      ${(subtotal + calculateTaxAmount()).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -387,7 +264,7 @@ const CartPage = () => {
           </div>
         </>
       )}
-      <Modal
+      <CartModal
         isVisible={isModalVisible}
         onClose={handleCloseModal}
         onSubmit={handleBillSubmit}
@@ -395,4 +272,5 @@ const CartPage = () => {
     </div>
   );
 };
+
 export default CartPage;

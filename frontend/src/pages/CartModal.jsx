@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import SearchBar from "./SearchBar";
 
-const Modal = ({ isVisible, onClose, onSubmit }) => {
+const CartModal = ({ isVisible, onClose, onSubmit, customers }) => {
   const [customerName, setCustomerName] = useState("");
   const [customerNumber, setCustomerNumber] = useState("");
   const [address, setAddress] = useState("");
@@ -8,8 +10,20 @@ const Modal = ({ isVisible, onClose, onSubmit }) => {
   const [paymentStatus, setPaymentStatus] = useState("Pending");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (!isVisible) {
+      setCustomerName("");
+      setCustomerNumber("");
+      setAddress("");
+      setPaymentMode("Cash");
+      setPaymentStatus("Pending");
+      setError("");
+    }
+  }, [isVisible]);
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    if (error) return;
     onSubmit({
       customerName,
       customerNumber,
@@ -17,6 +31,25 @@ const Modal = ({ isVisible, onClose, onSubmit }) => {
       paymentMode,
       paymentStatus,
     });
+  };
+
+  const handleCustomerSelect = (customer) => {
+    setCustomerName(customer.name);
+    setCustomerNumber(customer.number);
+    setAddress(customer.address);
+  };
+
+  const handleCustomerNumberChange = (e) => {
+    const value = e.target.value;
+    if (/^\d*$/.test(value)) {
+      // Check if value is numeric
+      setCustomerNumber(value);
+      if (value.length === 10) {
+        setError("");
+      } else {
+        setError("Customer number must be exactly 10 digits.");
+      }
+    }
   };
 
   if (!isVisible) {
@@ -34,6 +67,9 @@ const Modal = ({ isVisible, onClose, onSubmit }) => {
         </button>
         <form onSubmit={handleFormSubmit}>
           <h2 className="text-xl font-semibold mb-4">Bill Details</h2>
+
+          <SearchBar customers={customers} onSelect={handleCustomerSelect} />
+
           <div className="mb-4">
             <label className="block text-gray-700">Customer Name</label>
             <input
@@ -45,21 +81,11 @@ const Modal = ({ isVisible, onClose, onSubmit }) => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700">Customer Number</label>
+            <label className="block text-gray-700">Customer Phone Number</label>
             <input
-              type="number"
+              type="text"
               value={customerNumber}
-              onChange={(e) => {
-                const value = e.target.value;
-                setCustomerNumber(value);
-
-                // Validate customer number length
-                if (value.length === 10) {
-                  setError("");
-                } else {
-                  setError("Customer number must be exactly 10 digits.");
-                }
-              }}
+              onChange={handleCustomerNumberChange}
               required
               className="w-full border border-gray-300 p-2 rounded"
             />
@@ -107,7 +133,7 @@ const Modal = ({ isVisible, onClose, onSubmit }) => {
               type="submit"
               className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
             >
-              Generate Bill
+              Pay Bill
             </button>
           </div>
         </form>
@@ -116,4 +142,11 @@ const Modal = ({ isVisible, onClose, onSubmit }) => {
   );
 };
 
-export default Modal;
+CartModal.propTypes = {
+  isVisible: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  customers: PropTypes.array.isRequired,
+};
+
+export default CartModal;

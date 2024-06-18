@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import UpdateDiscountModal from "./UpdateDiscountModal";
 
 const DiscountList = () => {
   const [discounts, setDiscounts] = useState([]);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDiscountId, setSelectedDiscountId] = useState(null);
 
   useEffect(() => {
     fetchDiscounts();
@@ -36,6 +39,18 @@ const DiscountList = () => {
     }
   };
 
+  const deleteDiscount = async (discountId) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/discounts/${discountId}`);
+      setDiscounts(
+        discounts.filter((discount) => discount.discountId !== discountId)
+      );
+    } catch (error) {
+      console.error(`Error deleting discount:`, error);
+      setError("Failed to delete discount. Please try again later.");
+    }
+  };
+
   const calculateDiscountedPrice = (item, discount) => {
     const originalPrice = item.price;
     let discountAmount = 0;
@@ -50,10 +65,29 @@ const DiscountList = () => {
     const itemType = item.productname ? "product" : "variant";
     const itemId = item.productname ? item.productId : item.variantId;
 
+    // Check if the discount has expired
+    const currentDate = new Date();
+    const endDate = new Date(discount.endDate);
+    if (currentDate > endDate) {
+      // If end date has passed, update discounted price in database
+      updateDiscountedPriceInDB(itemType, itemId, originalPrice);
+      return { discountedPrice: originalPrice, discountAmount: 0 };
+    }
+
     // Update the discounted price in the database
     updateDiscountedPriceInDB(itemType, itemId, discountedPrice);
 
     return { discountedPrice, discountAmount };
+  };
+
+  const openModal = (discountId) => {
+    setSelectedDiscountId(discountId);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedDiscountId(null);
+    setIsModalOpen(false);
   };
 
   const renderDiscountRow = (discount) => {
@@ -70,20 +104,26 @@ const DiscountList = () => {
 
     const item = product || variant;
 
-    // Check if the item (product or variant) exists
-    if (!item) {
-      return null; // Return null to skip rendering this row
+    let itemType, itemName, itemSKU, itemPrice, discountedPrice, discountAmount;
+
+    if (item) {
+      itemType = product ? "Product" : "Variant";
+      itemName = product ? product.productname : variant.name;
+      itemSKU = item.SKU;
+      itemPrice = item.price;
+
+      ({ discountedPrice, discountAmount } = calculateDiscountedPrice(
+        item,
+        discount
+      ));
+    } else {
+      itemType = "N/A";
+      itemName = "N/A";
+      itemSKU = "N/A";
+      itemPrice = 0;
+      discountedPrice = 0;
+      discountAmount = 0;
     }
-
-    const itemType = product ? "Product" : "Variant";
-    const itemName = product ? product.productname : variant.name;
-    const itemSKU = item.SKU;
-    const itemPrice = item.price;
-
-    const { discountedPrice, discountAmount } = calculateDiscountedPrice(
-      item,
-      discount
-    );
 
     return (
       <tr
@@ -104,12 +144,26 @@ const DiscountList = () => {
           <br />
           <strong>Original Price:</strong> ${itemPrice.toFixed(2)}
           <br />
-          <strong>Discount Applied:</strong>{" "}
+          <strong>Discount Applied:</strong>
           {type === "percentage"
             ? `${discountAmount.toFixed(2)} (${value}%)`
             : `$${discountAmount.toFixed(2)}`}
           <br />
           <strong>Discounted Price:</strong> ${discountedPrice.toFixed(2)}
+        </td>
+        <td className="p-2 flex space-x-2">
+          <button
+            onClick={() => deleteDiscount(discountId)}
+            className="px-2 py-1 bg-red-500 text-white rounded"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => openModal(discountId)}
+            className="px-2 py-1 bg-green-500 text-white rounded"
+          >
+            Update
+          </button>
         </td>
       </tr>
     );
@@ -128,10 +182,10 @@ const DiscountList = () => {
           </Link>
         </div>
       </div>
-      {error ? (
-        <p className="text-center text-red-500">{error}</p>
-      ) : discounts.length === 0 ? (
-        <p className="text-center text-gray-500">No discounts available.</p>
+      {error || discounts.length === 0 ? (
+        <p className="text-center text-red-500">
+          {error || "No discounts available."}
+        </p>
       ) : (
         <table className="w-full border-collapse">
           <thead>
@@ -142,11 +196,17 @@ const DiscountList = () => {
               <th className="p-2 text-left">Start Date</th>
               <th className="p-2 text-left">End Date</th>
               <th className="p-2 text-left">Item Details</th>
+              <th className="p-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>{discounts.map(renderDiscountRow)}</tbody>
         </table>
       )}
+      <UpdateDiscountModal
+        isOpen={isModalOpen}
+        handleClose={closeModal}
+        discountId={selectedDiscountId}
+      />
     </div>
   );
 };

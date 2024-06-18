@@ -12,26 +12,42 @@ exports.createBill = async (req, res) => {
 
 exports.getAllCustomers = async (req, res) => {
   try {
+    const search = req.query.search || '';
     const bills = await Bill.findAll();
-    
+
     const uniqueCustomers = {};
-    
+
     bills.forEach((bill) => {
       if (!uniqueCustomers[bill.customerName]) {
         uniqueCustomers[bill.customerName] = {
+          id: bill.id,
           name: bill.customerName,
           number: bill.customerNumber,
           address: bill.address,
+          orders: [{
+            date: bill.date,
+            cartItems: bill.cartItems,
+          }],
         };
+      } else {
+        uniqueCustomers[bill.customerName].orders.push({
+          date: bill.date,
+          cartItems: bill.cartItems,
+        });
       }
     });
 
-    const customers = Object.values(uniqueCustomers);
+    const customers = Object.values(uniqueCustomers).filter(customer =>
+      customer.name.toLowerCase().includes(search.toLowerCase()) ||
+      customer.number.includes(search)
+    );
+
     res.status(200).json(customers);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 // Get all bills
 exports.getAllBills = async (req, res) => {
   try {
