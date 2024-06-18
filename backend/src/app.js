@@ -1,8 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./config/db');
+
+// Import models
+const {User, Role, Permission, UserPermission} = require('./models');
+
+
+
 // Import routes
-const userRoutes = require('./routes/authRoutes');
+
+const roleRoutes = require('./routes/roleRoutes');
+const userRoutes = require('./routes/userRoutes');
+const tenantRoutes = require('./routes/tenantRoutes');
+const staffRoutes = require('./routes/staffRoutes');
+const permissionRoutes = require('./routes/permissionRoutes');
+const userPermissionRoutes = require('./routes/userPermissionRoutes'); // Adjust the path as necessary
+const authenticateToken = require('./middleware/auth');
 const billRoutes = require('./routes/billRoutes');
 const taxRoutes = require('./routes/taxRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -13,25 +26,62 @@ const app = express();
 // Middleware
 app.use(cors());
 
+
 // Parse JSON request body
 app.use(express.json());
 
 
 // Use routes
-app.use('/api/user', userRoutes);// Prefixing routes with /api
+app.use('/auth/role', roleRoutes);
 
-app.use('/api',billRoutes);
-app.use('/api', taxRoutes);
-app.use('/api', productRoutes);
-app.use('/api',variantRoutes);
-app.use('/api',discountRoutes);
-
-
+app.use('/auth/user', userRoutes);
+app.use('/auth/tenant', tenantRoutes);
+app.use('/auth/staff', staffRoutes);
+app.use('/auth/permission', permissionRoutes);
+app.use('/auth/userpermission', userPermissionRoutes);
 
 
 
+app.get('/auth/grant-permission', authenticateToken, async (req, res) => {
+  try {
+    const user = req.user;
 
+    // If user is superadmin, grant all permissions
+    if (user.username === 'superadmin') {
+      return res.json({ permissions: ['superadmin'] });
+    }
 
+    // Fetch user's role from the database
+    const fetchedUser = await User.findByPk(user.userId, { include: [{ model: Role }] });
+    if (!fetchedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const userRole = fetchedUser.Role.role_name;
+
+    // If user's role is "store", grant all permissions
+    if (userRole === 'store') {
+      return res.json({ permissions: ['store'] });
+    }
+
+    // Fetch user permissions from the database
+    const userPermissions = await UserPermission.findAll({
+      where: { user_id: user.userId },
+      include: [
+        {
+          model: Permission,
+          attributes: ['permission_name'],
+        },
+      ],
+    });
+
+    const permissions = userPermissions.map(up => up.Permission.permission_name);
+
+    res.json({ permissions });
+  } catch (error) {
+    console.error('Error fetching user permissions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 // Sample function

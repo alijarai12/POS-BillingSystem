@@ -6,3 +6,19 @@ module.exports = {
   'migrations-path': path.resolve('src', 'migrations'),     // Path to your Sequelize migrations directory
   // 'seeders-path': path.resolve('src', 'seeders')         // Uncomment this line if you're using seeders
 };
+
+
+
+// npm i sequelize-cli
+
+// After creating the .sequelizerc file, you don't need to run any specific command related to the file itself. Instead, you can continue using Sequelize CLI commands as usual, and Sequelize CLI will automatically use the paths specified in the .sequelizerc file.
+
+// For example, you can run Sequelize CLI commands such as generating migrations or running migrations:
+
+// npx sequelize-cli migration:generate --name migration-name
+
+// npx sequelize-cli db:migrate
+
+// npx sequelize db:migrate:undo --name 20240528100653-create-permission-table.js                  
+const path = require('path');
+
