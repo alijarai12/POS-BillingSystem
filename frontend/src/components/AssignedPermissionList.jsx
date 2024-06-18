@@ -147,9 +147,9 @@ const AssignedPermissionList = () => {
         <table className="w-full border-collapse mt-5">
           <thead>
             <tr>
-              <th className="bg-gray-100 p-2 border-b font-bold">User ID</th>
+              {/* <th className="bg-gray-100 p-2 border-b font-bold">User ID</th> */}
               <th className="bg-gray-100 p-2 border-b font-bold">Username</th>
-              <th className="bg-gray-100 p-2 border-b font-bold">Permission ID</th>
+              {/* <th className="bg-gray-100 p-2 border-b font-bold">Permission ID</th> */}
               <th className="bg-gray-100 p-2 border-b font-bold">Permission Name</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Permission Description</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Actions</th>
@@ -158,9 +158,9 @@ const AssignedPermissionList = () => {
           <tbody>
             {assignedPermissions.map(({ user_permission_id, User, Permission }) => (
               <tr key={user_permission_id}>
-                <td className="p-2 border-b">{User.user_id}</td>
+                {/* <td className="p-2 border-b">{User.user_id}</td> */}
                 <td className="p-2 border-b">{User.username}</td>
-                <td className="p-2 border-b">{Permission.permission_id}</td>
+                {/* <td className="p-2 border-b">{Permission.permission_id}</td> */}
                 <td className="p-2 border-b">{Permission.permission_name}</td>
                 <td className="p-2 border-b">{Permission.permission_description}</td>
                 <td className="p-2 border-b">

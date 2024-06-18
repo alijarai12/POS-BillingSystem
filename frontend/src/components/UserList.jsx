@@ -135,8 +135,8 @@ const UserList = () => {
           console.error('Roles response is not an array:', roleResponse.data);
         }
 
-        if (Array.isArray(tenantResponse.data.tenant)) {
-          setTenants(tenantResponse.data.tenant);
+        if (Array.isArray(tenantResponse.data.tenants)) {
+          setTenants(tenantResponse.data.tenants);
         } else {
           console.error('Tenants response is not an array:', tenantResponse.data);
         }
@@ -170,12 +170,12 @@ const UserList = () => {
 
   const getRoleName = (roleId) => {
     const role = roles.find(role => role.role_id === roleId);
-    return role ? role.role_name : 'Unknown Role';
+    return role ? role.role_name : 'No Role for Superadmin';
   };
 
   const getTenantName = (tenantId) => {
     const tenant = tenants.find(tenant => tenant.tenant_id === tenantId);
-    return tenant ? tenant.fullname : 'Null';
+    return tenant ? tenant.business_name : 'Null';
   };
 
   return (
@@ -188,14 +188,13 @@ const UserList = () => {
         <table className="w-full border-collapse mt-5">
           <thead>
             <tr>
-              <th className="bg-gray-100 p-2 border-b font-bold">ID</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Sno.</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Username</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Email</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Active</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Role</th>
-              <th className="bg-gray-100 p-2 border-b font-bold">Tenant</th>
-              <th className="bg-gray-100 p-2 border-b font-bold">Created At</th>
-              <th className="bg-gray-100 p-2 border-b font-bold">Updated At</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Store</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -207,8 +206,7 @@ const UserList = () => {
                 <td className="p-2 border-b">{user.is_active ? 'Yes' : 'No'}</td>
                 <td className="p-2 border-b">{getRoleName(user.role_id)}</td>
                 <td className="p-2 border-b">{getTenantName(user.tenant_id) ?? 'N/A'}</td>
-                <td className="p-2 border-b">{new Date(user.createdAt).toLocaleDateString()}</td>
-                <td className="p-2 border-b">{new Date(user.updatedAt).toLocaleDateString()}</td>
+                <td className="p-2 border-b">{user.is_active ? 'Active' : 'Inactive'}</td>
               </tr>
             ))}
           </tbody>

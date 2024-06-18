@@ -108,7 +108,7 @@ const PermissionList = () => {
         <table className="w-full border-collapse mt-5">
           <thead>
             <tr>
-              <th className="bg-gray-100 p-2 border-b font-bold">ID</th>
+              {/* <th className="bg-gray-100 p-2 border-b font-bold">ID</th> */}
               <th className="bg-gray-100 p-2 border-b font-bold">Name</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Description</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Actions</th>
@@ -117,7 +117,7 @@ const PermissionList = () => {
           <tbody>
             {permissions.map(permission => (
               <tr key={permission.permission_id}>
-                <td className="p-2 border-b">{permission.permission_id}</td>
+                {/* <td className="p-2 border-b">{permission.permission_id}</td> */}
                 <td className="p-2 border-b">{permission.permission_name}</td>
                 <td className="p-2 border-b">{permission.permission_description}</td>
                 <td className="p-2 border-b">

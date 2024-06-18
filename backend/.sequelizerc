@@ -18,3 +18,5 @@ module.exports = {
 // npx sequelize-cli migration:generate --name migration-name
 
 // npx sequelize-cli db:migrate
+
+// npx sequelize db:migrate:undo --name 20240528100653-create-permission-table.js                  

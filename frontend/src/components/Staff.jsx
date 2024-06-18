@@ -21,8 +21,6 @@ const StaffForm = () => {
           return;
         }
 
-        console.log('Fetching roles with token:', token); // Debugging log
-
         const response = await axios.get('http://localhost:5000/auth/role', {
           headers: {
             Authorization: `Bearer ${token}`
@@ -69,10 +67,13 @@ const StaffForm = () => {
         }
       });
       setSuccessMessage(response.data.message);
-      setErrorMessage('');
+      setErrorMessage([]);  // Clear errors on success
     } catch (error) {
-      console.error('Error creating staff:', error);
-      setErrorMessage(error.response?.data?.message || 'Failed to create staff.');
+      if (error.response && error.response.data && error.response.data.errors) {
+        setErrorMessage(error.response.data.errors.map(err => err.msg));
+    } else {
+        setErrorMessage(error.response?.data?.message || 'Failed to create staff.');
+    }
       setSuccessMessage('');
     }
   };
@@ -104,7 +105,13 @@ const StaffForm = () => {
             ))}
           </select>
         </div>
-        {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
+        {errorMessage.length > 0 && (
+          <div className="text-red-500 mb-4">
+            {errorMessage.map((msg, index) => (
+              <div key={index}>{msg}</div>
+            ))}
+          </div>
+        )}
         {successMessage && <div className="text-green-500 mb-4">{successMessage}</div>}
         <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">Create Staff</button>
       </form>

@@ -12,13 +12,17 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      permission_description: { // New column
+        type: Sequelize.TEXT,
+        allowNull: true // Optional, can be set to false if description is required
+      },
       createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
+        type: Sequelize.DATE
       },
       updatedAt: {
-        type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
+        type: Sequelize.DATE
       },
       deletedAt: {
         type: Sequelize.DATE

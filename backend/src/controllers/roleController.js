@@ -2,11 +2,16 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Role = require('../models/Role');
-
+const { validationResult } = require('express-validator');
 
 
 // Create a new role
 const createRole = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    
     try {
         const { role_name } = req.body;
         const role = await Role.create({ role_name });

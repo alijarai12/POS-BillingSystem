@@ -1,5 +1,4 @@
 'use strict';
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Tenants', {
@@ -8,43 +7,35 @@ module.exports = {
         primaryKey: true,
         autoIncrement: true
       },
-      fullname: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
-      },
-      address: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      phone_number: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
       owner_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users', // Name of the referenced table (Users table)
-          key: 'user_id'  // Name of the referenced key in the Users table
+          model: 'Users',
+          key: 'user_id'
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
+      business_name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+        comment: 'The name of the tenant\'s business.'
+      },
       createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
+        type: Sequelize.DATE
       },
       updatedAt: {
-        type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
+        type: Sequelize.DATE
       },
       deletedAt: {
         type: Sequelize.DATE
       }
     });
   },
-
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('Tenants');
   }

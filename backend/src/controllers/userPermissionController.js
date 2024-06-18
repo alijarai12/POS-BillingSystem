@@ -2,16 +2,30 @@
 
 const { assignPermissionToUser } = require('../services/userPermissionService');
 const { User, Permission, UserPermission } = require('../models');
+const { validationResult } = require('express-validator');
 
 const assignPermission = async (req, res) => {
+    // Validate input using express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
     const { userId, permissionIds } = req.body;
 
-
     try {
-        // Validate input
-        if (!userId || !Array.isArray(permissionIds) || permissionIds.length === 0) {
+        const requestingUser = req.user; // Access user information from req.user
+        console.log('requestingUser:', requestingUser);
+        
+        if (!requestingUser) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
 
-            return res.status(400).json({ success: false, message: 'Invalid input' });
+        if (requestingUser.username !== 'superadmin') {
+            const seletedUser = await User.findByPk(userId);
+            if(!seletedUser || seletedUser.tenant_id !== requestingUser.tenant_id) {
+                return res.status(403).json({ success: false, message: 'Permission denied' });
+            }
         }
 
         // Assign permissions to user
@@ -29,49 +43,22 @@ const assignPermission = async (req, res) => {
     }
 };
 
-// List of assigned permissions for a user
-const listAssignedPermissions = async (req, res) => {
-    const { userId } = req.params;
-    const user = await User.findByPk(userId);
-    if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    const userPermissions = await UserPermission.findAll({
-        where: { user_id: userId },
-        include: [{ model: Permission }]
-    });
-    res.status(200).json(userPermissions);
-};
-
-// List of assingned permisions for all users
-// const listAllAssignedPermissions = async (req, res) => {
-//     const userPermissions = await UserPermission.findAll({
-//         include: [{ model: User }, { model: Permission }]
-//     });
-//     res.status(200).json(userPermissions);
-// };
-
-
 const listAllAssignedPermissions = async (req, res) => {
     try {
         // Retrieve user information from the decoded token attached to the request object by the authentication middleware
         const user = req.user;
         console.log('User:', user);
 
-        // Fetch user permissions based on the user ID obtained from the token
-        let userPermissions;
-        if (user.username === 'super') {
-            // If the user is "super", retrieve all permissions without filtering
-            userPermissions = await UserPermission.findAll({
-                include: [{ model: User }, { model: Permission }]
-            });
-        } else {
-            // For regular users, filter permissions based on the user ID
-            userPermissions = await UserPermission.findAll({
-                where: { user_id: user.userId }, // Assuming your UserPermission model has a user_id field
-                include: [{ model: User }, { model: Permission }]
-            });
-        }
+        // Fetch permissions related to the user's tenant_id
+        const userPermissions = await UserPermission.findAll({
+            include: [
+                {
+                    model: User,
+                    where: { tenant_id: user.tenant_id }
+                },
+                { model: Permission }
+            ]
+        });
 
         console.log('User Permissions:', userPermissions);
 
@@ -86,15 +73,6 @@ const listAllAssignedPermissions = async (req, res) => {
 
 
 
-
-
-
-const getAllUserPermissions = async (req, res) => {
-    const userPermissions = await UserPermission.findAll();
-    res.status(200).json(userPermissions);
-};
-
-
 // Get a user permission by ID
 const getUserPermissionById = async (req, res) => {
     const id = parseInt(req.params.id);
@@ -107,10 +85,10 @@ const getUserPermissionById = async (req, res) => {
 
 // Update a user permission
 const updateUserPermission = async (req, res) => {
-    const { id } = req.params;
+    const { userPermissionId } = req.params;
     const { user_id, permission_id } = req.body;
     try {
-        const userPermission = await UserPermission.findByPk(id);
+        const userPermission = await UserPermission.findByPk(userPermissionId);
         if (!userPermission) {
             return res.status(404).json({ success: false, message: 'User permission not found' });
         }
@@ -126,9 +104,9 @@ const updateUserPermission = async (req, res) => {
 
 // Delete a user permission
 const deleteUserPermission = async (req, res) => {
-    const { id } = req.params;
+    const { userPermissionId } = req.params;
     try {
-        const userPermission = await UserPermission.findByPk(id);
+        const userPermission = await UserPermission.findByPk(userPermissionId);
         if (!userPermission) {
             return res.status(404).json({ success: false, message: 'User permission not found' });
         }
@@ -139,4 +117,4 @@ const deleteUserPermission = async (req, res) => {
     }
 };
 
-module.exports = { assignPermission, listAssignedPermissions, listAllAssignedPermissions, getUserPermissionById, updateUserPermission, deleteUserPermission };
+module.exports = { assignPermission, listAllAssignedPermissions, getUserPermissionById, updateUserPermission, deleteUserPermission };

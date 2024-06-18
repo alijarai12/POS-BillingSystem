@@ -1,52 +1,8 @@
-// import React, { useState } from 'react';
-// import { Link } from 'react-router-dom';
-// import { FaBox, FaChevronDown, FaChevronUp } from 'react-icons/fa';
-
-// const Sidebar = () => {
-//   const [isProductsOpen, setProductsOpen] = useState(false);
-
-//   const toggleProducts = () => {
-//     setProductsOpen(!isProductsOpen);
-//   };
-
-//   return (
-//     <div className=" bg-purple-500 text-white w-64 p-4">
-//       <h2 className="text-3xl font-bold mb-6">Navigation</h2>
-//       <ul className="space-y-4">
-//         <li className="group">
-//           <button
-//             onClick={toggleProducts}
-//             className="flex items-center justify-between w-full py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300"
-//           >
-//             <span className="flex items-center">
-//               <FaBox className="mr-3" />
-//               Products
-//             </span>
-//             {isProductsOpen ? <FaChevronUp /> : <FaChevronDown />}
-//           </button>
-//           {isProductsOpen && (
-//             <ul className="mt-2 space-y-2 ml-6">
-//               <li>
-//                 <Link to="/products/category1" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Category 1</Link>
-//               </li>
-//               <li>
-//                 <Link to="/products/category2" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Category 2</Link>
-//               </li>
-//               <li>
-//                 <Link to="/products/category3" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Category 3</Link>
-//               </li>
-//             </ul>
-//           )}
-//         </li>
-//       </ul>
-//     </div>
-//   );
-// };
-
 // export default Sidebar;
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaBox, FaChevronDown, FaChevronUp, FaUsers, FaBarcode, FaUnlock, FaUserTie, FaDollarSign } from 'react-icons/fa';
+import { useUserPermissions } from '../context/UserPermissionsContext';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [isProductsOpen, setProductsOpen] = useState(false);
@@ -54,8 +10,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const [isStaffsOpen, setStaffsOpen] = useState(false);
   const [isRolesOpen, setRolesOpen] = useState(false);
   const [isPermissionsOpen, setPermissionsOpen] = useState(false);
-  const [isRolePermissionsOpen, setRolePermissionsOpen] = useState(false);
+  const [isAssignedPermissionsOpen , setAssignedPermissionsOpen] = useState(false);
   const [isSalesOpen, setSalesOpen] = useState(false);
+
+  // Use the custom hook to access user permissions
+  const { userPermissions= [], isSuperAdmin, isStoreAdmin } = useUserPermissions();
+
 
   const toggleProducts = () => {
     setProductsOpen(!isProductsOpen);
@@ -82,8 +42,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     if (!isOpen) toggleSidebar(); // Open sidebar if closed
   };
 
-  const toggleRolePermissions = () => {
-    setRolePermissionsOpen(!isRolePermissionsOpen);
+  const toggleAssignedPermissions = () => {
+    setAssignedPermissionsOpen(!isAssignedPermissionsOpen  );
     if (!isOpen) toggleSidebar(); // Open sidebar if closed
   };
 
@@ -99,7 +59,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       } lg:translate-x-0`}
     >
       <div className="flex items-center justify-between p-4 mb-6">
-        <h2 className="text-3xl font-bold">MyApp</h2>
+        <h2 className="text-3xl font-bold">POS</h2>
         <button onClick={toggleSidebar} className="lg:hidden text-white">
           X
         </button>
@@ -111,7 +71,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           className="w-full p-2 rounded-md bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-gray-600"
         />
       </div>
+      
       <ul className="space-y-4 px-4">
+      {userPermissions.includes('Manage Product') || isSuperAdmin || isStoreAdmin ? (
         <li className="group">
           <button
             onClick={toggleProducts}
@@ -140,7 +102,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </ul>
           )}
         </li>
+      ) : null}
         
+        {userPermissions.includes('Manage Users') || isSuperAdmin ? (
         <li className="group">
           <button
             onClick={toggleUsers}
@@ -158,10 +122,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <Link to="/user/user-list" className="block py-2 px-4 bg-gray-800 rounded-md huser/user-listover:bg-gray-700 transition duration-300">User List</Link>
               </li>
               <li>
-                <Link to="/user/tenant-list" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Tenant List</Link>
+                <Link to="/user/tenant-list" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Store List</Link>
               </li>
               <li>
-                <Link to="/tenant/add-tenant" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Add Tenent</Link>
+                <Link to="/tenant/add-tenant" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Add Store</Link>
               </li>
               <li>
                 {/* <Link to="/variants/add-variants" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Add Variants</Link> */}
@@ -169,7 +133,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </ul>
           )}
         </li>
+      ) : null}
 
+        {userPermissions.includes('Manage Staff') || isStoreAdmin ? (
         <li className="group">
           <button
             onClick={toggleStaffs}
@@ -198,14 +164,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </ul>
           )}
         </li>
+      ) : null}
 
+      {userPermissions.includes('Manage Customer') || isStoreAdmin ? (
         <li>
           <Link to="/customers" className="flex items-center py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">
             <FaUsers className="mr-3" />
             Customers
           </Link>
         </li>
+      ) : null}
 
+      {userPermissions.includes('Manage Roles') || isSuperAdmin || isStoreAdmin ? (  
         <li className="group">
           <button
             onClick={toggleRoles}
@@ -221,20 +191,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <ul className="mt-2 space-y-2 ml-6">
               <li>
                 <Link to="/role/role-list" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Role List</Link>
-              </li>
-              {/* <li>
-                <Link to="/variants" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Variants</Link>
-              </li>
-              <li>
-                <Link to="/products/add-products" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Add Product</Link>
-              </li> */}
+              </li>              
               <li>
                 <Link to="/role/add-role" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Add Role</Link>
               </li>
             </ul>
           )}
         </li>
+      ) : null}
 
+      {userPermissions.includes('Manage Permissions') || isSuperAdmin || isStoreAdmin ? (
         <li className="group">
           <button
             onClick={togglePermissions}
@@ -258,19 +224,21 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </ul>
           )}
         </li>
+      ) : null}
 
+      {userPermissions.includes('Manage Assigned Permission of Staff') || isStoreAdmin ? (  
         <li className="group">
           <button
-            onClick={toggleRolePermissions}
+            onClick={toggleAssignedPermissions}
             className="flex items-center justify-between w-full py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300"
           >
             <span className="flex items-center">
               <FaUnlock className="mr-3" />
              Assigned Permission
             </span>
-            {isRolePermissionsOpen ? <FaChevronUp /> : <FaChevronDown />}
+            {isAssignedPermissionsOpen  ? <FaChevronUp /> : <FaChevronDown />}
           </button>
-          {isRolePermissionsOpen && (
+          {isAssignedPermissionsOpen  && (
             <ul className="mt-2 space-y-2 ml-6">
               <li>
                 <Link to="/permission/assigned-permission-list" className="block py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">Assigned-Permission List</Link>
@@ -281,21 +249,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </ul>
           )}
         </li>
+      ) : null}
 
-
-        {/* <li>
-          <Link to="/customers" className="flex items-center py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">
-            <FaUnlock className="mr-3" />
-            Permission
-          </Link>
-        </li> */}
-
+      {userPermissions.includes('Manage Barcode Scanning') || isSuperAdmin || isStoreAdmin ? (
         <li>
           <Link to="/barcode" className="flex items-center py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300">
             <FaBarcode className="mr-3" />
             Barcode
             </Link>
         </li>
+      ) : null}
+
+      {userPermissions.includes('Manage Sales and Billing') || isSuperAdmin || isStoreAdmin ? (
         <li className="group">
           <button
             onClick={toggleSales}
@@ -318,6 +283,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </ul>
           )}
         </li>
+      ) : null}
       </ul>
     </div>
   );

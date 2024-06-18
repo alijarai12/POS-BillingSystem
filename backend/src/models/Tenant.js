@@ -7,34 +7,21 @@ const Tenant = sequelize.define('Tenant', {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
-    },    
-    fullname: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        // validate: {
-        //     notEmpty: true,
-        //     len: [1, 100]
-        // }
-    },
-    address: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        
-    },
-    phone_number: {
-        type: DataTypes.STRING,
-        allowNull: true,
-       
     },
     owner_id: {
         type: DataTypes.INTEGER,
-        allowNull: true,
         references: {
-            model: 'User', // Name of the referenced model (User model)
-            key: 'id'      // Name of the referenced key in the User model
-        }
-    }
+            model: User, 
+            key: 'user_id'   
+        },
+        allowNull: false,
+    },
+    business_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        comment: 'The name of the tenant\'s business.'
+    },
 }, {
     timestamps: true,
     paranoid: true

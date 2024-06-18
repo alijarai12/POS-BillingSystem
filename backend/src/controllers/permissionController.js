@@ -1,8 +1,12 @@
 const Permission = require('../models/Permission');
-
+const { validationResult } = require('express-validator');
 
 // Create a Permission
 const createPermission = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const { permission_name, permission_description } = req.body;
         const permission = await Permission.create({ permission_name, permission_description });

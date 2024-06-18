@@ -4,15 +4,16 @@ import { Input, Button, Card } from '@nextui-org/react';
 
 const CreateTenantUserForm = () => {
   const [formData, setFormData] = useState({
-    fullname: '',
     address: '',
-    phone_number: '',
+    contact: '',
+    business_name: '',
     ownerUsername: '',
     ownerEmail: '',
     ownerPassword: '',
+    confirmPassword: ''
   });
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [error] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -24,36 +25,90 @@ const CreateTenantUserForm = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setError('');
-    try {
-      const response = await axios.post('http://localhost:5000/auth/user/createTenant', formData);
-      setMessage(response.data.message);
-    } catch (error) {
-      setError(error.response?.data?.message || 'An error occurred');
+
+    // Frontend validation
+    if (formData.ownerPassword !== formData.confirmPassword) {
+      setMessage("Passwords do not match.");
+      return;
     }
-  };
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.ownerEmail)) {
+      setMessage("Please enter a valid email address.");
+      return;
+    }
+
+    const dataToSend = {
+      ...formData
+    };
+
+    try {
+      const response = await axios.post('http://localhost:5000/auth/user/createTenant', dataToSend);
+      if (response && response.data) {
+        console.log('Registration successful:', response.data);
+        setMessage("Registration successful!");
+        setFormData({
+          address: '',
+          contact: '',
+          business_name: '',
+          ownerUsername: '',
+          ownerEmail: '',
+          ownerPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        console.error('Error registering: Response data is undefined.');
+        setMessage('Error registering: Response data is undefined.');
+      }
+    } catch (error) {
+      console.error('Error registering:', error.response?.data || error.message);
+      if (error.response && error.response.data && error.response.data.message) {
+        setMessage(`Error registering: ${error.response.data.message}`);
+        if (error.response.data.details) {
+          setMessage(prevMessage => `${prevMessage}\n${error.response.data.details.map(detail => detail.message).join('\n')}`);
+        }
+      } else {
+        setMessage('Error registering: An unexpected error occurred.');
+      }
+    }
+    };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="p-6 max-w-md w-full">
-        <h3 className="text-center mb-4">Tenant Registration Form </h3>
+        <h3 className="text-center mb-4">Store Registration Form </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            clearable
-            bordered
-            fullWidth
-            label="Full Name"
-            name="fullname"
-            value={formData.fullname}
-            onChange={handleChange}
-            required
-          />
+              clearable
+              bordered
+              fullWidth
+              label="Username"
+              name="ownerUsername"
+              value={formData.ownerUsername}
+              onChange={handleChange} 
+              isRequired             
+            />
+
+            <Input
+              clearable
+              bordered
+              fullWidth
+              label="Business Name"
+              name="business_name"
+              value={formData.business_name}
+              onChange={handleChange}   
+              isRequired           
+            />
+
           <Input
             clearable
             bordered
@@ -62,28 +117,18 @@ const CreateTenantUserForm = () => {
             name="address"
             value={formData.address}
             onChange={handleChange}
-            required
           />
+
           <Input
             clearable
             bordered
             fullWidth
-            label="Phone Number"
-            name="phone_number"
-            value={formData.phone_number}
+            label="Contact Number"
+            name="contact"
+            value={formData.contact}
             onChange={handleChange}
-            required
           />
-          <Input
-            clearable
-            bordered
-            fullWidth
-            label="Owner Username"
-            name="ownerUsername"
-            value={formData.ownerUsername}
-            onChange={handleChange}
-            required
-          />
+          
           <Input
             clearable
             bordered
@@ -93,18 +138,29 @@ const CreateTenantUserForm = () => {
             name="ownerEmail"
             value={formData.ownerEmail}
             onChange={handleChange}
-            required
+            isRequired
           />
+
           <Input
             clearable
             bordered
             fullWidth
-            label="Owner Password"
+            label="Password"
             type="password"
             name="ownerPassword"
             value={formData.ownerPassword}
             onChange={handleChange}
-            required
+          />
+
+          <Input
+            clearable
+            bordered
+            fullWidth
+            label="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
           />
 
           <Button type="submit" color="primary" className="w-full">Create</Button>

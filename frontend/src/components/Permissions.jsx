@@ -16,6 +16,7 @@ const PermissionForm = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setError('Authentication token not found');
+        setLoading(false);
         return;
       }
 
@@ -27,12 +28,22 @@ const PermissionForm = () => {
           Authorization: `Bearer ${token}`
         }
       });
+
       setMessage(response.data.message);
       setError('');
       setPermissionName('');
       setPermissionDescription('');
     } catch (err) {
-      setError(err.response ? err.response.data.error : 'An error occurred');
+      if (err.response) {
+        if (err.response.status === 400) {
+        const errors = err.response.data.errors;
+        setError(errors.map(error => error.msg).join(', '));
+      } else {
+        setError(err.response.data.error || 'An error occurred');
+      }
+    } else {
+      setError('Network error. Please try again.');
+    }
       setMessage('');
     } finally {
       setLoading(false);

@@ -11,20 +11,48 @@ const User = sequelize.define('User', {
     },
     username: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true
+    },
+    first_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: false,
+    },
+    middle_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: false,
+    },
+    last_name: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+    },
+    address: {
+        type: DataTypes.STRING,
+        allowNull: true,        
+    },
+    contact: {
+        type: DataTypes.STRING,
+        allowNull: true,   
+        unique: true,    
+    },   
+    profile_image: {
+        type: DataTypes.BLOB('long'), // <- type for image ( database :postgresql ) BLOB is a binary large object type.
+        allowNull: true,
     },
     email: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
-        // validate: {
-        //     isEmail: true
-        // }
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false
+        validate: {
+            notEmpty: true,
+            len: [6, 255] // example length constraints
+        },
     },
     is_active: {
         type: DataTypes.BOOLEAN,
@@ -36,7 +64,7 @@ const User = sequelize.define('User', {
             model: Role,
             key: 'role_id'
         },
-        allowNull: true
+        allowNull: true // Nullable for SuperAdmin
     },
     tenant_id: {
         type: DataTypes.INTEGER,
@@ -52,9 +80,4 @@ const User = sequelize.define('User', {
 });
 
 
-// // Define associations
-// User.belongsTo(Role, { foreignKey: 'role_id' });
-// User.belongsTo(Tenant, { foreignKey: 'tenant_id' });
-
 module.exports = User;
-

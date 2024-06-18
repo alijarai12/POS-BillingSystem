@@ -31,7 +31,19 @@ const RoleForm = () => {
       setError('');
       setRoleName('');
     } catch (err) {
-      setError(err.response ? err.response.data.error : 'An error occurred');
+      if (err.response) {
+        if (err.response.status === 400) {
+          // Validation error
+          const errors = err.response.data.errors;
+          setError(errors.map(error => error.msg).join(', ')); // Displaying all validation errors
+        } else {
+          // Server error
+          setError(err.response.data.error || 'An error occurred');
+        }
+      } else {
+        // Network error
+        setError('Network error. Please try again.');
+      }
       setMessage('');
     } finally {
       setLoading(false);

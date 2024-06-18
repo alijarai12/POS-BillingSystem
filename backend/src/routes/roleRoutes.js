@@ -4,16 +4,13 @@ const express = require('express');
 const { createRole, getAllRoles, getRoleById, updateRoleById, deleteRoleById } = require('../controllers/roleController');
 const authenticateToken = require('../middleware/auth.js');
 const checkPermission = require('../middleware/grantPermission');
-
+const { validateRole } = require('../middleware/all_validator');
 const router = express.Router();
 
 
 // viewRoles routes
-
-// router.get('/viewRoles', authenticateToken, viewRoles);
-
-router.post('/', authenticateToken, checkPermission('ManageRoles'), createRole);
-router.get('/', authenticateToken, checkPermission('ManageRoles'), getAllRoles);
+router.post('/', authenticateToken, validateRole, checkPermission('Manage Roles'), createRole);
+router.get('/', authenticateToken, getAllRoles);
 
 
 // Get/update role by ID

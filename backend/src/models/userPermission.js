@@ -31,8 +31,8 @@ const UserPermission = sequelize.define('UserPermission', {
   });
   
 // Define associations if needed
-UserPermission.belongsTo(User, { foreignKey: 'user_id' });
-UserPermission.belongsTo(Permission, { foreignKey: 'permission_id' });
+// UserPermission.belongsTo(User, { foreignKey: 'user_id' });
+// UserPermission.belongsTo(Permission, { foreignKey: 'permission_id' });
 
 
   module.exports = UserPermission;

@@ -22,8 +22,8 @@ const TenantList = () => {
           }
         });
 
-        if (response.data && response.data.tenant) {
-          setTenants(response.data.tenant);
+        if (response.data && response.data.tenants) {
+          setTenants(response.data.tenants);
           setError('');
         } else {
           setError('Tenants not found');
@@ -60,15 +60,23 @@ const TenantList = () => {
         <table className="w-full border-collapse mt-5">
           <thead>
             <tr>
-              <th className="bg-gray-100 p-2 border-b font-bold">ID</th>
-              <th className="bg-gray-100 p-2 border-b font-bold">Name</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Sno.</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Business Name</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Email</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Contact</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Address</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Status</th>
             </tr>
           </thead>
           <tbody>
             {tenants.map((tenant, index) => (
-              <tr key={tenant.id}>
+              <tr key={tenant.tenant_id}>
                 <td className="p-2 border-b">{index + 1}</td>
-                <td className="p-2 border-b">{tenant.fullname}</td>
+                <td className="p-2 border-b">{tenant.business_name}</td>
+                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].email : 'N/A'}</td>
+                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].contact : 'N/A'}</td>
+                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].address : 'N/A'}</td>
+                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].is_active ? 'Active' : 'Inactive' : 'N/A'}</td>
               </tr>
             ))}
           </tbody>

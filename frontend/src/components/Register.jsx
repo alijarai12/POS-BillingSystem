@@ -5,12 +5,10 @@ import { Button } from '@nextui-org/react';
 const Register = () => {
   // State to hold form data
   const [formData, setFormData] = useState({
-    username: '',
+    username: '',    
     email: '',
     password: '',
-    confirmPassword: '',
-    role_id: '', // Required field
-    tenant_id: '' // Optional field for SuperAdmin
+    confirmPassword: ''
   });
 
   // State to hold messages to display to the user
@@ -42,25 +40,10 @@ const Register = () => {
       return;
     }
 
-    // Validate and convert role_id to integer
-    const roleId = parseInt(formData.role_id, 10);
-    if (isNaN(roleId)) {
-      setMessage("Role ID must be a valid integer.");
-      return;
-    }
-
-    // Validate and convert tenant_id to integer if provided
-    const tenantId = formData.tenant_id ? parseInt(formData.tenant_id, 10) : null;
-    if (formData.tenant_id && isNaN(tenantId)) {
-      setMessage("Tenant ID must be a valid integer.");
-      return;
-    }
-
+    
     // Create data object to send to backend
     const dataToSend = {
-      ...formData,
-      role_id: roleId,
-      tenant_id: tenantId
+      ...formData
     };
 
     try {
@@ -73,12 +56,16 @@ const Register = () => {
         console.error('Error registering: Response data is undefined.');
         setMessage('Error registering: Response data is undefined.');
       }
-    } catch (error) {
+    }  catch (error) {
       console.error('Error registering:', error.response?.data || error.message);
-      setMessage('Error registering: ' + (error.response?.data?.message || error.message));
+      if (error.response && error.response.data && error.response.data.message) {
+        setMessage(`Error registering: ${error.response.data.message}`);
+      } else {
+        setMessage('Error registering: An unexpected error occurred.');
+      }
     }
   };
-
+  
   return (
     <div className="max-w-md p-4 border rounded-lg shadow-lg">
       {message && <p className="mb-4 text-red-500">{message}</p>}
@@ -137,33 +124,6 @@ const Register = () => {
             className="form-input mt-1 block w-full border border-gray-300 rounded focus:outline-none focus:border-blue-500 transition duration-500 ease-in-out"
             placeholder="Confirm your password"
             required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="role_id" className="block text-gray-700">Role ID</label>
-          <input
-            type="text"
-            id="role_id"
-            name="role_id"
-            value={formData.role_id}
-            onChange={handleChange}
-            className="form-input mt-1 block w-full border border-gray-300 rounded focus:outline-none focus:border-blue-500 transition duration-500 ease-in-out"
-            placeholder="Enter your role ID"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="tenant_id" className="block text-gray-700">Tenant ID (Optional for SuperAdmin)</label>
-          <input
-            type="text"
-            id="tenant_id"
-            name="tenant_id"
-            value={formData.tenant_id}
-            onChange={handleChange}
-            className="form-input mt-1 block w-full border border-gray-300 rounded focus:outline-none focus:border-blue-500 transition duration-500 ease-in-out"
-            placeholder="Enter your tenant ID"
           />
         </div>
 

@@ -20,18 +20,17 @@ const AssignPermissionForm = () => {
           return;
         }
 
-        const [permissionsRes, usersRes] = await Promise.all([
-          axios.get('http://localhost:5000/auth/permission/', {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }),
-          axios.get('http://localhost:5000/auth/user/', {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          })
+        const headers = {
+          Authorization: `Bearer ${token}`
+        };
+
+        const [permissionsRes, usersRes, loggedInUserRes] = await Promise.all([
+          axios.get('http://localhost:5000/auth/permission/', { headers }),
+          axios.get('http://localhost:5000/auth/user/', { headers }),
+          axios.get('http://localhost:5000/auth/user/profile', { headers }) // Assuming this endpoint gives logged-in user details
         ]);
+
+        const loggedInUser = loggedInUserRes.data;
 
         if (Array.isArray(permissionsRes.data.permissions)) {
           setPermissions(permissionsRes.data.permissions);
@@ -41,7 +40,8 @@ const AssignPermissionForm = () => {
         }
 
         if (Array.isArray(usersRes.data)) {
-          setUsers(usersRes.data);
+          const filteredUsers = usersRes.data.filter(user => user.tenant_id === loggedInUser.tenant_id && user.user_id !== loggedInUser.user_id);
+          setUsers(filteredUsers);
         } else {
           console.error('Users data is not an array:', usersRes.data);
           setUsers([]);
@@ -115,7 +115,13 @@ const AssignPermissionForm = () => {
       console.log('Form Data after submission:', formData);
     } catch (error) {
       console.error('Error assigning permissions:', error);
-      setErrorMessage(error.response?.data?.message || 'Failed to assign permissions.');
+      console.log('Response data:', error.response.data); // Log the entire response data
+      if (error.response.data.errors && error.response.data.errors.length > 0) {
+          const errorMessages = error.response.data.errors.map(error => error.msg).join(', ');
+          setErrorMessage(`Failed to assign permissions: ${errorMessages}`);
+      } else {
+          setErrorMessage(error.response?.data?.message || 'Failed to assign permissions.');
+      }
       setSuccessMessage('');
     }
   };

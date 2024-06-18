@@ -60,17 +60,25 @@ const StaffList = () => {
         <table className="w-full border-collapse mt-5">
           <thead>
             <tr>
-              <th className="bg-gray-100 p-2 border-b font-bold">ID</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Sno.</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Username</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Email</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Contact</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Address</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Role</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Status</th>
             </tr>
           </thead>
           <tbody>
             {staff.map((user, index) => (
               <tr key={user.user_id}>
-                <td className="p-2 border-b">{user.user_id}</td>
+                <td className="p-2 border-b">{index + 1}</td>
                 <td className="p-2 border-b">{user.username}</td>
                 <td className="p-2 border-b">{user.email}</td>
+                <td className="p-2 border-b">{user.contact}</td>
+                <td className="p-2 border-b">{user.address}</td>
+                <td className="p-2 border-b">{user.Role.role_name}</td>
+                <td className="p-2 border-b">{user.is_active ? 'Active' : 'Inactive'}</td>
               </tr>
             ))}
           </tbody>

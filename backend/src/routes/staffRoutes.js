@@ -9,7 +9,7 @@ const router = express.Router();
 
 
 // Get all staff
-router.get('/', authenticateToken, checkPermission('ManageStaff'),  getAllStaff);
+router.get('/', authenticateToken, checkPermission('Manage Staff'),  getAllStaff);
 
 
 module.exports = router;
