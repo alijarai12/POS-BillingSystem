@@ -14,7 +14,8 @@ const userRoutes = require('./routes/userRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 const permissionRoutes = require('./routes/permissionRoutes');
-const userPermissionRoutes = require('./routes/userPermissionRoutes'); // Adjust the path as necessary
+const userPermissionRoutes = require('./routes/userPermissionRoutes'); 
+const passwordRoutes = require('./routes/passwordRoutes');
 const authenticateToken = require('./middleware/auth');
 
 
@@ -36,6 +37,7 @@ app.use('/auth/tenant', tenantRoutes);
 app.use('/auth/staff', staffRoutes);
 app.use('/auth/permission', permissionRoutes);
 app.use('/auth/userpermission', userPermissionRoutes);
+app.use('/auth/password', passwordRoutes);
 
 
 

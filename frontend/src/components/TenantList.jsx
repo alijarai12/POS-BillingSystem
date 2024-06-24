@@ -73,10 +73,10 @@ const TenantList = () => {
               <tr key={tenant.tenant_id}>
                 <td className="p-2 border-b">{index + 1}</td>
                 <td className="p-2 border-b">{tenant.business_name}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].email : 'N/A'}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].contact : 'N/A'}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].address : 'N/A'}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].is_active ? 'Active' : 'Inactive' : 'N/A'}</td>
+                <td className="p-2 border-b">{tenant.User?.email || 'N/A'}</td>
+                <td className="p-2 border-b">{tenant.User?.contact || 'N/A'}</td>
+                <td className="p-2 border-b">{tenant.User?.address || 'N/A'}</td>
+                <td className="p-2 border-b">{tenant.User?.is_active ? 'Active' : 'Inactive' || 'N/A'}</td>
               </tr>
             ))}
           </tbody>

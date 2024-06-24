@@ -12,7 +12,9 @@ const Tenant = sequelize.define('Tenant', {
         type: DataTypes.INTEGER,
         references: {
             model: User, 
-            key: 'user_id'   
+            key: 'user_id',
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'  
         },
         allowNull: false,
     },

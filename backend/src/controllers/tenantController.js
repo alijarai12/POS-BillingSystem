@@ -7,6 +7,7 @@ const getAllTenants = async (req, res) => {
         include: [
             {
                 model: User,
+                as: 'User',
                 attributes: ['user_id', 'email', 'contact', 'address', 'is_active']
             }
         ]

@@ -33,8 +33,8 @@ import PermissionFormPage from './pages/PermissionForm';
 import AssignedPermissionListPage from './pages/AssignedPermissionList';
 import AssignPermissionFormPage from './pages/AssignPermissionForm';
 
-// import RolePermissionListPage from './pages/RolePermissionList';
-// import RolePermissionFormPage from './pages/RolePermissionForm';
+import ResetPasswordFormPage from './pages/ResetPasswordForm';
+import SendResetPasswordEmailFormPage from './pages/SendResetPasswordEmailForm';
 
 
 export default function App() {
@@ -68,8 +68,8 @@ export default function App() {
           <Route path="/permission/assigned-permission-list" element={<AssignedPermissionListPage />} />
           <Route path="/permission/assign-permission-to-user" element={<AssignPermissionFormPage />} />
 
-          {/* <Route path="/role-permission/rolepermission-list" element={<RolePermissionListPage />} />
-          <Route path="/role-permission/add-rolepermission" element={<RolePermissionFormPage />} /> */}
+          <Route path="/reset-password/:token" element={<ResetPasswordFormPage />} />
+          <Route path="/forgot-password/send-reset-password-email" element={<SendResetPasswordEmailFormPage />} />
 
 
           <Route path="/signup" element={<RegisterPage />} />

@@ -78,6 +78,8 @@ const Login = () => {
 
                     <Button type="submit" className="mt-2" color="primary">Login</Button>
 
+                    <Button type="button" className="mt-2" onClick={() => navigate('/forgot-password/send-reset-password-email')}>Forget Password</Button>
+
                 </form>
             </div>
         </div>    

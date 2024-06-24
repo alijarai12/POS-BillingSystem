@@ -5,7 +5,6 @@ import { Input, Button, Card } from '@nextui-org/react';
 
 const Profile = () => {
   const [profile, setProfile] = useState({
-    username: '',
     first_name: '',
     last_name: '',
     address: '',
@@ -14,10 +13,8 @@ const Profile = () => {
     profile_image_preview: '',
     email: '',
     role_id: '',
-    tenant_id: ''
   });
   const [roles, setRoles] = useState([]);
-  const [tenants, setTenants] = useState([]);
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -62,19 +59,15 @@ const Profile = () => {
     const fetchRolesAndTenants = async () => {
       try {
         const token = localStorage.getItem('token');
-        const [roleResponse, tenantResponse] = await Promise.all([
+        const [roleResponse] = await Promise.all([
           axios.get('http://localhost:5000/auth/role/', {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:5000/auth/tenant/', {
-            headers: { Authorization: `Bearer ${token}` }
-          })
         ]);
 
         setRoles(roleResponse.data.roles || []);
-        setTenants(tenantResponse.data.tenant || []);
       } catch (err) {
-        console.error('Fetch roles and tenants error:', err);
+        console.error('Fetch roles error:', err);
         setError(err.response?.data?.message || err.message);
       }
     };
@@ -89,10 +82,6 @@ const Profile = () => {
     return role ? role.role_name : 'Null';
   };
 
-  const getTenantName = (tenantId) => {
-    const tenant = tenants.find(tenant => tenant.tenant_id === tenantId);
-    return tenant ? tenant.business_name : 'Null';
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -131,7 +120,6 @@ const Profile = () => {
     
     const formData = new FormData();
 
-    formData.append('username', profile.username);
     formData.append('first_name', profile.first_name);
     formData.append('last_name', profile.last_name);
     formData.append('address', profile.address);
@@ -197,16 +185,6 @@ const Profile = () => {
         <h2 className="text-2xl font-bold mb-4">Profile</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            clearable
-            bordered
-            fullWidth
-            label="Username"
-            name="username"
-            onChange={handleChange}
-            value={profile.username}
-          />
-
           <Input
             clearable
             bordered
@@ -282,17 +260,7 @@ const Profile = () => {
             value={getRoleName(profile.role_id)}
             readOnly
           />
-
-          <Input
-            clearable
-            underlined
-            fullWidth
-            label="Tenant"
-            name="tenant_id"
-            value={getTenantName(profile.tenant_id)}
-            readOnly
-          />
-
+          
           <Button type="submit" className="mt-2" color="primary" auto>
             Update Profile
           </Button>

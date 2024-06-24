@@ -200,7 +200,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </li>
       ) : null}
 
-      {userPermissions.includes('Manage Permissions') || isSuperAdmin || isStoreAdmin ? (
+      {userPermissions.includes('Manage Permissions') || isSuperAdmin ? (
         <li className="group">
           <button
             onClick={togglePermissions}

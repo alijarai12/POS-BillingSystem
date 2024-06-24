@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const StaffForm = () => {
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
     role_id: ''
@@ -30,7 +29,9 @@ const StaffForm = () => {
         console.log('Roles response:', response.data); // Debugging log
 
         if (Array.isArray(response.data.roles)) {
-          setRoles(response.data.roles);
+          const filterRoles = response.data.roles.filter(role => role.role_name !== 'store');
+          setRoles(filterRoles);
+          // setRoles(response.data.roles);
         } else {
           console.error('Roles data is not an array:', response.data);
           setRoles([]); // Set to an empty array if the response is not as expected
@@ -66,14 +67,21 @@ const StaffForm = () => {
           Authorization: `Bearer ${token}`
         }
       });
+
       setSuccessMessage(response.data.message);
       setErrorMessage([]);  // Clear errors on success
+      // Clear the form fields
+      setFormData({
+        email: '',
+        password: '',
+        role_id: ''
+      });
     } catch (error) {
       if (error.response && error.response.data && error.response.data.errors) {
         setErrorMessage(error.response.data.errors.map(err => err.msg));
-    } else {
+      } else {
         setErrorMessage(error.response?.data?.message || 'Failed to create staff.');
-    }
+      }
       setSuccessMessage('');
     }
   };
@@ -82,10 +90,6 @@ const StaffForm = () => {
     <div className="container mx-auto">
       <h1 className="text-2xl font-bold mb-4">Create Staff Account</h1>
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label htmlFor="username" className="block font-medium mb-1">Username</label>
-          <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} className="border rounded px-3 py-2 w-full" />
-        </div>
         <div className="mb-4">
           <label htmlFor="email" className="block font-medium mb-1">Email</label>
           <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} className="border rounded px-3 py-2 w-full" />

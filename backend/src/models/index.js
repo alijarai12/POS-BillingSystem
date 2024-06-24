@@ -9,8 +9,9 @@ const UserPermission = require('./userPermission');
 // Define associations
 User.belongsTo(Role, { foreignKey: 'role_id' });
 
-User.belongsTo(Tenant, { foreignKey: 'tenant_id' });
-Tenant.hasMany(User, { foreignKey: 'tenant_id' });
+User.hasMany(Tenant, { foreignKey: 'owner_id' });
+Tenant.belongsTo(User, { foreignKey: 'owner_id' });
+
 
 UserPermission.belongsTo(User, { foreignKey: 'user_id' });
 UserPermission.belongsTo(Permission, { foreignKey: 'permission_id' });

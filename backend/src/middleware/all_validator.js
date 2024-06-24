@@ -15,7 +15,6 @@ const validateLogin = [
 
 
 const validateStaff = [
-    check('username').notEmpty().withMessage('Username is required'),
     check('email').isEmail().withMessage('Please enter a valid email'),
     check('password')
         .isLength({ min: 5 })
@@ -26,7 +25,6 @@ const validateStaff = [
 ];
 
 const validateProfileUpdate = [
-    check('username').optional().notEmpty().withMessage('Username is required'),
     check('email').optional().isEmail().withMessage('Please enter a valid email'),
     check('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
 ];

@@ -147,20 +147,18 @@ const AssignedPermissionList = () => {
         <table className="w-full border-collapse mt-5">
           <thead>
             <tr>
-              {/* <th className="bg-gray-100 p-2 border-b font-bold">User ID</th> */}
-              <th className="bg-gray-100 p-2 border-b font-bold">Username</th>
-              {/* <th className="bg-gray-100 p-2 border-b font-bold">Permission ID</th> */}
+            <th className="bg-gray-100 p-2 border-b font-bold">Sno.</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">Name</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Permission Name</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Permission Description</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {assignedPermissions.map(({ user_permission_id, User, Permission }) => (
+            {assignedPermissions.map(({ user_permission_id, User, Permission }, index) => (
               <tr key={user_permission_id}>
-                {/* <td className="p-2 border-b">{User.user_id}</td> */}
-                <td className="p-2 border-b">{User.username}</td>
-                {/* <td className="p-2 border-b">{Permission.permission_id}</td> */}
+                <td className="p-2 border-b">{index + 1}</td>
+                <td className="p-2 border-b">{User.first_name}</td>
                 <td className="p-2 border-b">{Permission.permission_name}</td>
                 <td className="p-2 border-b">{Permission.permission_description}</td>
                 <td className="p-2 border-b">
@@ -182,7 +180,7 @@ const AssignedPermissionList = () => {
             {successMessage && <p className="text-green-500 mb-4">{successMessage}</p>} {/* Display success message */}
            
             <div className="mb-4">
-              <label htmlFor="userId" className="block text-sm font-medium text-gray-700">User ID:</label>
+              <label htmlFor="userId" className="block text-sm font-medium text-gray-700">Staff Name:</label>
               <select
                 id="userId"
                 name="userId"
@@ -192,13 +190,13 @@ const AssignedPermissionList = () => {
               >
                 {users.map(user => (
                   <option key={user.user_id} value={user.user_id}>
-                    {user.username}
+                    {user.first_name}
                   </option>
                 ))}
               </select>
             </div>
             <div className="mb-4">
-              <label htmlFor="permissionId" className="block text-sm font-medium text-gray-700">Permission ID:</label>
+              <label htmlFor="permissionId" className="block text-sm font-medium text-gray-700">Permission Name:</label>
               <select
                 id="permissionId"
                 name="permissionId"

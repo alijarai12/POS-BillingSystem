@@ -181,13 +181,12 @@ const createStaff = async (req, res) => {
     }
 
     try {
-        const { username, email, password, role_id } = req.body;
+        const { email, password, role_id } = req.body;
         const tenant_id = req.user.tenant_id;
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const newStaff = await User.create({
-            username,
             email,
             password: hashedPassword,
             role_id,
@@ -315,7 +314,7 @@ const updateProfile = async (req, res) => {
 
     try {
         const userId = req.user.userId;
-        const { username, first_name, last_name, address, contact, email, password } = req.body;
+        const { first_name, last_name, address, contact, email, password } = req.body;
 
         const user = await User.findByPk(userId);
         if (!user) {
@@ -323,7 +322,6 @@ const updateProfile = async (req, res) => {
         }
 
         // Update user details
-        if (username) user.username = username;
         if (first_name) user.first_name = first_name;
         if (last_name) user.last_name = last_name;
         if (address) user.address = address;
