@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const  Tenant= require('./Tenant');
 
 
 const Bill = sequelize.define(
@@ -79,8 +80,14 @@ const Bill = sequelize.define(
       allowNull: false,
     
     },
-    
-   
+    tenant_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Tenant,
+        key: 'tenant_id'
+      },
+      allowNull: false
+    },
     
   },
   {

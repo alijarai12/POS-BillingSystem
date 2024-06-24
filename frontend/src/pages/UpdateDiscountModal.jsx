@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Modal, Input, Button } from "@nextui-org/react";
 import Select from "react-select";
 
 const UpdateDiscountModal = ({ isOpen, handleClose, discountId }) => {
@@ -9,79 +10,97 @@ const UpdateDiscountModal = ({ isOpen, handleClose, discountId }) => {
     value: "",
     startDate: "",
     endDate: "",
-    selectedOption: null,
+    selectedOptions: [],
   });
-  const [dropdownOptions, setDropdownOptions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [options, setOptions] = useState([]);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchDiscountDetails = async () => {
-      if (discountId) {
-        try {
-          const response = await axios.get(
-            `http://localhost:5000/api/discounts/${discountId}`
-          );
-          const discount = response.data;
+      if (!discountId) return;
 
-          setDiscountData({
-            name: discount.name,
-            type: discount.type,
-            value: discount.value,
-            startDate: discount.startDate.split("T")[0],
-            endDate: discount.endDate.split("T")[0],
-            selectedOption: discount.product
-              ? {
-                  value: discount.product.productId,
-                  label: discount.product.productname,
-                  isProduct: true,
-                }
-              : discount.variant
-              ? {
-                  value: discount.variant.variantId,
-                  label: `${discount.variant.product.productname} - ${discount.variant.name}`,
-                  isProduct: false,
-                }
-              : null,
-          });
-        } catch (error) {
-          console.error("Error fetching discount details:", error);
-          setError("Failed to fetch discount details. Please try again.");
-        }
+      try {
+        setIsLoading(true);
+        const response = await axios.get(
+          `http://localhost:5000/api/discounts/${discountId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const { name, type, value, startDate, endDate, products, variants } =
+          response.data;
+
+        const selectedOptions = [
+          ...products.map((product) => ({
+            value: `product_${product.productId}`,
+            label: product.productname,
+            isProduct: true,
+            data: product,
+          })),
+          ...variants.map((variant) => ({
+            value: `variant_${variant.variantId}`,
+            label: `${variant.productname} - ${variant.name}`,
+            isProduct: false,
+            data: variant,
+          })),
+        ];
+
+        setDiscountData({
+          name,
+          type,
+          value,
+          startDate,
+          endDate,
+          selectedOptions,
+        });
+      } catch (error) {
+        console.error("Error fetching discount details:", error);
+        setError("Failed to fetch discount details. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchDiscountDetails();
-  }, [discountId]);
+  }, [discountId, token]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         const productsResponse = await axios.get(
-          "http://localhost:5000/api/products"
+          "http://localhost:5000/api/products",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const productsData = productsResponse.data;
 
         const options = productsData.flatMap((product) => {
           const productOption = {
-            value: product.productId,
+            value: `product_${product.productId}`,
             label: product.productname,
             isProduct: true,
+            data: product,
           };
 
           const variantOptions = product.variants.map((variant) => ({
-            value: variant.variantId,
+            value: `variant_${variant.variantId}`,
             label: `${product.productname} - ${variant.name}`,
             isProduct: false,
-            parentProductId: product.productId,
+            data: variant,
           }));
 
           return [productOption, ...variantOptions];
         });
 
-        setDropdownOptions(options);
+        setOptions(options);
       } catch (error) {
         console.error("Error fetching data:", error);
         setError("Failed to fetch products and variants. Please try again.");
@@ -91,159 +110,145 @@ const UpdateDiscountModal = ({ isOpen, handleClose, discountId }) => {
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setDiscountData((prevData) => ({
-      ...prevData,
+    setDiscountData((prevState) => ({
+      ...prevState,
       [name]: value,
     }));
   };
 
-  const handleSelectChange = (selectedOption) => {
-    setDiscountData((prevData) => ({
-      ...prevData,
-      selectedOption,
+  const handleOptionsSelect = (selectedOptions) => {
+    setDiscountData((prevState) => ({
+      ...prevState,
+      selectedOptions,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
-    setSuccessMessage("");
-
-    const { name, type, value, startDate, endDate, selectedOption } =
-      discountData;
-    const payload = {
-      name,
-      type,
-      value,
-      startDate,
-      endDate,
-      productId:
-        selectedOption && selectedOption.isProduct
-          ? selectedOption.value
-          : null,
-      variantId:
-        selectedOption && !selectedOption.isProduct
-          ? selectedOption.value
-          : null,
-    };
 
     try {
+      const requestData = {
+        ...discountData,
+        productIds: discountData.selectedOptions
+          .filter((option) => option.isProduct)
+          .map((option) => option.data.productId),
+        variantIds: discountData.selectedOptions
+          .filter((option) => !option.isProduct)
+          .map((option) => option.data.variantId),
+      };
+
       await axios.put(
         `http://localhost:5000/api/discounts/${discountId}`,
-        payload
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      setSuccessMessage("Discount updated successfully.");
-      setTimeout(() => {
-        handleClose();
-      }, 2000); // Close the modal after 2 seconds
+      console.log("Discount updated successfully!");
+      handleClose(); // Close the modal after successful update
     } catch (error) {
       console.error("Error updating discount:", error);
-      setError("Failed to update discount. Please try again.");
-    } finally {
-      setIsLoading(false);
+      setError("Failed to update discount.");
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-md w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Update Discount</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {successMessage && (
-          <p className="text-green-500 mb-4">{successMessage}</p>
-        )}
+    <Modal open={isOpen} onClose={handleClose} width="600px">
+      <Modal.Header>
+        <h2>Update Discountconst {discountId}</h2>
+      </Modal.Header>
+      <Modal.Body>
         <form onSubmit={handleSubmit}>
+          <Input
+            clearable
+            underlined
+            fullWidth
+            label="Name"
+            id="name"
+            name="name"
+            value={discountData.name}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            clearable
+            underlined
+            fullWidth
+            label="Type"
+            id="type"
+            name="type"
+            value={discountData.type}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            clearable
+            underlined
+            fullWidth
+            label="Value"
+            type="number"
+            id="value"
+            name="value"
+            value={discountData.value}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            clearable
+            underlined
+            fullWidth
+            label="Start Date"
+            type="date"
+            id="startDate"
+            name="startDate"
+            value={discountData.startDate}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            clearable
+            underlined
+            fullWidth
+            label="End Date"
+            type="date"
+            id="endDate"
+            name="endDate"
+            value={discountData.endDate}
+            onChange={handleChange}
+            required
+          />
           <div className="mb-4">
-            <label className="block text-gray-700">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={discountData.name}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Type</label>
-            <select
-              name="type"
-              value={discountData.type}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+            <label
+              htmlFor="options"
+              className="block text-sm font-medium text-gray-700 mb-1"
             >
-              <option value="percentage">Percentage</option>
-              <option value="fixed">Fixed Amount</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Value</label>
-            <input
-              type="number"
-              name="value"
-              value={discountData.value}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Start Date</label>
-            <input
-              type="date"
-              name="startDate"
-              value={discountData.startDate}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">End Date</label>
-            <input
-              type="date"
-              name="endDate"
-              value={discountData.endDate}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Product/Variant</label>
+              Products and Variants
+            </label>
             <Select
-              value={discountData.selectedOption}
-              onChange={handleSelectChange}
-              options={dropdownOptions}
-              isClearable
+              id="options"
+              name="options"
+              options={options}
+              value={discountData.selectedOptions}
+              onChange={handleOptionsSelect}
+              isMulti
             />
           </div>
-          <div className="flex justify-end space-x-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 bg-gray-500 text-white rounded"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-              disabled={isLoading}
-            >
-              {isLoading ? "Loading..." : "Update"}
-            </button>
+          <div className="mt-4 flex justify-end">
+            <Button type="submit" variant="contained">
+              Update
+            </Button>
           </div>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
         </form>
-      </div>
-    </div>
+      </Modal.Body>
+    </Modal>
   );
 };
 

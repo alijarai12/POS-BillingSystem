@@ -14,7 +14,12 @@ const TaxList = () => {
     const fetchTaxes = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get("http://localhost:5000/api/taxes");
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/taxes", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setTaxes(response.data);
       } catch (error) {
         console.error("Error fetching taxes:", error);
@@ -29,7 +34,12 @@ const TaxList = () => {
 
   const handleDeleteTax = async (taxId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/taxes/${taxId}`);
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/taxes/${taxId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setTaxes(taxes.filter((tax) => tax.taxId !== taxId));
     } catch (error) {
       console.error("Error deleting tax:", error);

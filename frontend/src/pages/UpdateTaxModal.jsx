@@ -22,8 +22,14 @@ const UpdateTaxModal = ({ isOpen, taxId, onClose, onUpdate }) => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        const token = localStorage.getItem("token");
         const productsResponse = await axios.get(
-          "http://localhost:5000/api/products"
+          "http://localhost:5000/api/products",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const productsData = productsResponse.data;
 
@@ -47,8 +53,14 @@ const UpdateTaxModal = ({ isOpen, taxId, onClose, onUpdate }) => {
         setDropdownOptions([{ value: null, label: "None" }, ...options]);
 
         if (taxId) {
+          const token = localStorage.getItem("token");
           const taxResponse = await axios.get(
-            `http://localhost:5000/api/taxes/${taxId}`
+            `http://localhost:5000/api/taxes/${taxId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           setTaxData(taxResponse.data);
         }
@@ -97,10 +109,14 @@ const UpdateTaxModal = ({ isOpen, taxId, onClose, onUpdate }) => {
       const filteredTaxData = Object.fromEntries(
         Object.entries(taxData).filter(([key, value]) => value !== "")
       );
-
+      const token = localStorage.getItem("token");
       const response = await axios.put(
         `http://localhost:5000/api/taxes/${taxId}`,
-        filteredTaxData
+        filteredTaxData,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       console.log("Tax updated:", response.data);
       setSuccessMessage("Tax updated successfully!");

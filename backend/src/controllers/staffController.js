@@ -27,4 +27,18 @@ const getAllStaff = async (req, res) => {
 };
 
 
-module.exports = { getAllStaff };
+const deleteStaff = async (req, res) => {
+    const { staffId } = req.params;
+    try {
+        const staff = await User.findByPk(staffId);
+        if (!staff) {
+            return res.status(404).json({ error: 'Staff not found' });
+        }
+        await staff.destroy();
+        res.status(200).json({ message: 'Staff deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+module.exports = { getAllStaff ,
+    deleteStaff };

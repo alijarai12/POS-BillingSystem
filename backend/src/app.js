@@ -39,6 +39,11 @@ app.use('/auth/tenant', tenantRoutes);
 app.use('/auth/staff', staffRoutes);
 app.use('/auth/permission', permissionRoutes);
 app.use('/auth/userpermission', userPermissionRoutes);
+app.use('/api',billRoutes);
+app.use('/api', taxRoutes);
+app.use('/api', productRoutes);
+app.use('/api',variantRoutes);
+app.use('/api',discountRoutes);
 
 
 

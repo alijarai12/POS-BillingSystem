@@ -17,19 +17,26 @@ const CartPage = () => {
   const [variants, setVariants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tenantId, setTenantId] = useState(null); // State for tenant ID
 
   useEffect(() => {
-    const fetchVariants = async () => {
+    const fetchTenantId = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/variants`);
-        setVariants(response.data);
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/auth/tenant", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setTenantId(response.data.tenantId);
       } catch (error) {
-        setError("Failed to fetch variants");
+        setError("Failed to fetch tenant ID");
       } finally {
         setLoading(false);
       }
     };
 
+    fetchTenantId();
     fetchVariants();
     fetchTaxRatesFromServer();
   }, []);
@@ -38,9 +45,30 @@ const CartPage = () => {
     calculateSubtotal();
   }, [cart]);
 
+  const fetchVariants = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`http://localhost:5000/api/variants`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setVariants(response.data);
+    } catch (error) {
+      setError("Failed to fetch variants");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchTaxRatesFromServer = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/taxes");
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:5000/api/taxes", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setTaxRates(response.data);
     } catch (error) {
       console.error("Error fetching tax rates:", error);
@@ -72,9 +100,16 @@ const CartPage = () => {
   const updateVariantStock = async (variantId, quantity) => {
     const variant = variants.find((v) => v.variantId === variantId);
     if (variant) {
-      await axios.put(`http://localhost:5000/api/variants/${variantId}`, {
-        stock: variant.stock + quantity,
-      });
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `http://localhost:5000/api/variants/${variantId}`,
+        { stock: variant.stock + quantity },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setVariants((prevVariants) =>
         prevVariants.map((v) =>
           v.variantId === variantId ? { ...v, stock: v.stock + quantity } : v
@@ -107,13 +142,18 @@ const CartPage = () => {
       tax: includeTax ? tax : 0,
       totalAmount: includeTax ? subtotal + tax : subtotal,
       date: new Date(),
+      tenantId: tenantId, // Adding the tenant ID to the bill data
     };
 
     try {
-      await axios.post("http://localhost:5000/api/bills", bill);
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:5000/api/bills", bill, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       clearCart();
       setModalVisible(false);
-
       navigate("/bill", { state: { fromCart: true } });
     } catch (error) {
       console.error("Error generating bill:", error);
@@ -227,7 +267,7 @@ const CartPage = () => {
                 </button>
               </div>
               <div className="flex items-center justify-between mt-4">
-                <div className="text-right border-t pt-4">
+                <div className="text-right border-t pt  border-gray-200">
                   <div className="text-lg font-semibold flex justify-between">
                     Order Summary
                   </div>

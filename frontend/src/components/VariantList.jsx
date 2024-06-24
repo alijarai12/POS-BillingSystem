@@ -12,7 +12,17 @@ const VariantList = ({ productId }) => {
 
   const fetchVariants = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/variants`);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authentication token not found");
+        setLoading(false);
+        return;
+      }
+      const response = await axios.get("http://localhost:5000/api/variants", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setVariants(response.data);
       setLoading(false);
     } catch (error) {
@@ -34,10 +44,17 @@ const VariantList = ({ productId }) => {
 
       try {
         // Update stock in the database
+        const token = localStorage.getItem("token");
         await axios.put(
           `http://localhost:5000/api/variants/${variant.variantId}`,
+
           {
             stock: variant.stock - 1,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 

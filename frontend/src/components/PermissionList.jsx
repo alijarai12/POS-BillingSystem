@@ -1,44 +1,49 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const PermissionList = () => {
   const [permissions, setPermissions] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState(null);
-  const [newPermissionName, setNewPermissionName] = useState('');
-  const [newPermissionDescription, setNewPermissionDescription] = useState('');
+  const [newPermissionName, setNewPermissionName] = useState("");
+  const [newPermissionDescription, setNewPermissionDescription] = useState("");
 
   useEffect(() => {
     const fetchPermissions = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
-          setError('Authentication token not found');
+          setError("Authentication token not found");
           setLoading(false);
           return;
         }
 
-        const response = await axios.get('http://localhost:5000/auth/permission/', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/auth/permission/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (response.data && response.data.permissions) {
           setPermissions(response.data.permissions);
-          setError('');
+          setError("");
         } else {
-          setError('Permissions not found');
+          setError("Permissions not found");
         }
       } catch (err) {
         if (err.response && err.response.status === 403) {
-          setError('Forbidden: You do not have the necessary permissions');
+          setError("Forbidden: You do not have the necessary permissions");
         } else {
-          setError(err.response ? err.response.data.error : 'An error occurred');
+          setError(
+            err.response ? err.response.data.error : "An error occurred"
+          );
         }
-        console.error('Error fetching permissions:', err);
+        console.error("Error fetching permissions:", err);
       } finally {
         setLoading(false);
       }
@@ -48,7 +53,7 @@ const PermissionList = () => {
 
     return () => {
       setPermissions([]);
-      setError('');
+      setError("");
     };
   }, []);
 
@@ -61,38 +66,59 @@ const PermissionList = () => {
 
   const handleUpdateSubmit = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/auth/permission/${selectedPermission.permission_id}`, {
-        permission_name: newPermissionName,
-        permission_description: newPermissionDescription
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const token = localStorage.getItem("token");
+      await axios.put(
+        `http://localhost:5000/auth/permission/${selectedPermission.permission_id}`,
+        {
+          permission_name: newPermissionName,
+          permission_description: newPermissionDescription,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      setPermissions(permissions.map(permission => permission.permission_id === selectedPermission.permission_id ? { ...permission, permission_name: newPermissionName, permission_description: newPermissionDescription } : permission));
+      );
+      setPermissions(
+        permissions.map((permission) =>
+          permission.permission_id === selectedPermission.permission_id
+            ? {
+                ...permission,
+                permission_name: newPermissionName,
+                permission_description: newPermissionDescription,
+              }
+            : permission
+        )
+      );
       setIsModalOpen(false);
       setSelectedPermission(null);
-      setNewPermissionName('');
-      setNewPermissionDescription('');
+      setNewPermissionName("");
+      setNewPermissionDescription("");
     } catch (error) {
-      console.error('Error updating permission:', error);
-      setError('Failed to update permission');
+      console.error("Error updating permission:", error);
+      setError("Failed to update permission");
     }
   };
 
   const handleDelete = async (permission_id) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/auth/permission/${permission_id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const token = localStorage.getItem("token");
+      await axios.delete(
+        `http://localhost:5000/auth/permission/${permission_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      setPermissions(permissions.filter(permission => permission.permission_id !== permission_id));
+      );
+      setPermissions(
+        permissions.filter(
+          (permission) => permission.permission_id !== permission_id
+        )
+      );
     } catch (error) {
-      console.error('Error deleting permission:', error);
-      setError('Failed to delete permission');
+      console.error("Error deleting permission:", error);
+      setError("Failed to delete permission");
     }
   };
 
@@ -102,7 +128,9 @@ const PermissionList = () => {
 
   return (
     <div className="max-w-4xl w-full mx-auto p-8 bg-white rounded-lg shadow">
-      <h2 className="text-3xl font-bold mb-4 text-center text-primary">Permission List</h2>
+      <h2 className="text-3xl font-bold mb-4 text-center text-primary">
+        Permission List
+      </h2>
       {error && <p className="text-red-500 text-center">{error}</p>}
       {!error && permissions.length > 0 ? (
         <table className="w-full border-collapse mt-5">
@@ -110,19 +138,33 @@ const PermissionList = () => {
             <tr>
               {/* <th className="bg-gray-100 p-2 border-b font-bold">ID</th> */}
               <th className="bg-gray-100 p-2 border-b font-bold">Name</th>
-              <th className="bg-gray-100 p-2 border-b font-bold">Description</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">
+                Description
+              </th>
               <th className="bg-gray-100 p-2 border-b font-bold">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {permissions.map(permission => (
+            {permissions.map((permission) => (
               <tr key={permission.permission_id}>
                 {/* <td className="p-2 border-b">{permission.permission_id}</td> */}
                 <td className="p-2 border-b">{permission.permission_name}</td>
-                <td className="p-2 border-b">{permission.permission_description}</td>
                 <td className="p-2 border-b">
-                  <button onClick={() => handleUpdateClick(permission)} className="text-blue-600">Update</button>
-                  <button onClick={() => handleDelete(permission.permission_id)} className="text-red-600 ml-2">Delete</button>
+                  {permission.permission_description}
+                </td>
+                <td className="p-2 border-b">
+                  <button
+                    onClick={() => handleUpdateClick(permission)}
+                    className="text-blue-600"
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => handleDelete(permission.permission_id)}
+                    className="text-red-600 ml-2"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
@@ -150,8 +192,15 @@ const PermissionList = () => {
               placeholder="Permission Description"
             />
             <div className="flex justify-end">
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-600 mr-3">Cancel</button>
-              <button onClick={handleUpdateSubmit} className="text-blue-600">Update</button>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-600 mr-3"
+              >
+                Cancel
+              </button>
+              <button onClick={handleUpdateSubmit} className="text-blue-600">
+                Update
+              </button>
             </div>
           </div>
         </div>

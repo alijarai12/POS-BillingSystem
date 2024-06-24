@@ -1,14 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Home from './pages/Home';
-import ProductFormPage from './pages/ProductForm';
-import ProductListPage from './pages/ProductList';
-import ProductDetails from './components/ProductDetails';
-import Layout from './components/Layout';
-import VariantList from './components/VariantList';
-import VariantForm from './components/VariantForm';
-import BarcodeGenerator from "./components/Barcode";
-
 
 
 import RegisterPage from './pages/Register';
@@ -33,13 +24,9 @@ import PermissionFormPage from './pages/PermissionForm';
 import AssignedPermissionListPage from './pages/AssignedPermissionList';
 import AssignPermissionFormPage from './pages/AssignPermissionForm';
 
-// import RolePermissionListPage from './pages/RolePermissionList';
-// import RolePermissionFormPage from './pages/RolePermissionForm';
-
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import ProductFormPage from './pages/ProductForm';
+import ProductListPage from './pages/ProductList';
 import ProductList from './components/ProductList';
 import ProductDetails from './components/ProductDetails';
 import Layout from './components/Layout';
@@ -74,26 +61,13 @@ export default function App() {
           <Route path="/discounts" element={<DiscountList />} />
           <Route path="/products" element={<ProductList />} />
          <Route path="/add-product" element={<ProductFormPage />} />
-          <Route path="/variants" element={<VariantList />} />
+         <Route path="/variants" element={<VariantList/>}/>
+         
           <Route path="/barcode" element={<BarcodeGenerator />} />
           <Route path="/products/:productId" element={<ProductDetails />} />
           <Route path="/products/add-products" element={<ProductFormPage />} />
           <Route path="/variants/add-variants" element={<VariantForm />} />
-       </Routes>
-     
-      
-   
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<ProductListPage />} />
-          <Route path="/add-product" element={<ProductFormPage />} />
-          <Route path="/variants" element={<VariantList />} />
-          <Route path="/barcode" element={<BarcodeGenerator />} />
-
-          <Route path="/products/:productId" element={<ProductDetails />} />
-          <Route path="/products/add-products" element={<ProductFormPage />} />
-          <Route path="/variants/add-variants" element={<VariantForm />} />
-
+       
           <Route path="/user/user-list" element={<UserListPage />} />
           <Route path="/user/tenant-list" element={<TenantListPage />} />
           <Route path="/tenant/add-tenant" element={<TenantFormPage />} />

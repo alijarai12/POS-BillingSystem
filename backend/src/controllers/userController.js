@@ -80,7 +80,7 @@ const loginUser = async (req, res) => {
         permissions: user.permissions // Include user permissions here
     },
     process.env.JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '1D' }
     );
 
     res.status(200).json({ message: 'Login successful', token, userId: user.user_id, role_id: user.role_id, username: user.username, tenant_id: user.tenant_id });
@@ -354,6 +354,8 @@ const updateProfile = async (req, res) => {
 };
 
 
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -365,6 +367,6 @@ module.exports = {
   updateUserById,
   deleteUserById,
   viewProfile,
-  updateProfile,
+  updateProfile
 
 };

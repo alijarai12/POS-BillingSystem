@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const Product = require('./Product');
 const Variant = require('./Variant');
+const Tenant = require('./Tenant');
 
 const Discount = sequelize.define(
   'Discount',
@@ -49,21 +50,13 @@ const Discount = sequelize.define(
       type: DataTypes.DATE,
       allowNull: false,
     },
-    productId: {
+    tenant_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
       references: {
-        model: 'Product',
-        key: 'productId',
+        model: Tenant,
+        key: 'tenant_id'
       },
-    },
-    variantId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'Variant',
-        key: 'variantId',
-      },
+      allowNull: false
     },
   },
   {
@@ -72,7 +65,20 @@ const Discount = sequelize.define(
   }
 );
 
-Discount.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-Discount.belongsTo(Variant, { foreignKey: 'variantId', as: 'variant' });
+// Define the many-to-many association with Products
+Discount.belongsToMany(Product, {
+  through: 'DiscountProducts',
+  foreignKey: 'discountId',
+  otherKey: 'productId',
+  as: 'products',
+});
+
+// Define the many-to-many association with Variants
+Discount.belongsToMany(Variant, {
+  through: 'DiscountVariants',
+  foreignKey: 'discountId',
+  otherKey: 'variantId',
+  as: 'variants',
+});
 
 module.exports = Discount;

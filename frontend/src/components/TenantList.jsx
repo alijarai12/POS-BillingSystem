@@ -1,40 +1,42 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const TenantList = () => {
   const [tenants, setTenants] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTenants = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
-          setError('Authentication token not found');
+          setError("Authentication token not found");
           setLoading(false);
           return;
         }
 
-        const response = await axios.get('http://localhost:5000/auth/tenant/', {
+        const response = await axios.get("http://localhost:5000/auth/tenant/", {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         if (response.data && response.data.tenants) {
           setTenants(response.data.tenants);
-          setError('');
+          setError("");
         } else {
-          setError('Tenants not found');
+          setError("Tenants not found");
         }
       } catch (err) {
         if (err.response && err.response.status === 403) {
-          setError('Forbidden: You do not have the necessary permissions');
+          setError("Forbidden: You do not have the necessary permissions");
         } else {
-          setError(err.response ? err.response.data.error : 'An error occurred');
+          setError(
+            err.response ? err.response.data.error : "An error occurred"
+          );
         }
-        console.error('Error fetching tenants:', err);
+        console.error("Error fetching tenants:", err);
       } finally {
         setLoading(false);
       }
@@ -44,7 +46,7 @@ const TenantList = () => {
 
     return () => {
       setTenants([]);
-      setError('');
+      setError("");
     };
   }, []);
 
@@ -61,7 +63,9 @@ const TenantList = () => {
           <thead>
             <tr>
               <th className="bg-gray-100 p-2 border-b font-bold">Sno.</th>
-              <th className="bg-gray-100 p-2 border-b font-bold">Business Name</th>
+              <th className="bg-gray-100 p-2 border-b font-bold">
+                Business Name
+              </th>
               <th className="bg-gray-100 p-2 border-b font-bold">Email</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Contact</th>
               <th className="bg-gray-100 p-2 border-b font-bold">Address</th>
@@ -73,10 +77,22 @@ const TenantList = () => {
               <tr key={tenant.tenant_id}>
                 <td className="p-2 border-b">{index + 1}</td>
                 <td className="p-2 border-b">{tenant.business_name}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].email : 'N/A'}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].contact : 'N/A'}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].address : 'N/A'}</td>
-                <td className="p-2 border-b">{tenant.Users.length > 0 ? tenant.Users[0].is_active ? 'Active' : 'Inactive' : 'N/A'}</td>
+                <td className="p-2 border-b">
+                  {tenant.Users.length > 0 ? tenant.Users[0].email : "N/A"}
+                </td>
+                <td className="p-2 border-b">
+                  {tenant.Users.length > 0 ? tenant.Users[0].contact : "N/A"}
+                </td>
+                <td className="p-2 border-b">
+                  {tenant.Users.length > 0 ? tenant.Users[0].address : "N/A"}
+                </td>
+                <td className="p-2 border-b">
+                  {tenant.Users.length > 0
+                    ? tenant.Users[0].is_active
+                      ? "Active"
+                      : "Inactive"
+                    : "N/A"}
+                </td>
               </tr>
             ))}
           </tbody>

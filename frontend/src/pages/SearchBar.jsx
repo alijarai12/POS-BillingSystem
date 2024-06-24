@@ -13,9 +13,13 @@ const SearchBar = ({ onSelect }) => {
         setLoading(true);
         setError("");
         try {
+          const token = localStorage.getItem("token");
           const response = await axios.get(
             "http://localhost:5000/api/customers",
             {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
               params: { search: searchTerm },
             }
           );

@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import PrintComponent from "./PrintPage";
-import { useLocation } from "react-router-dom"; // Assuming this is the correct path
+import { useLocation } from "react-router-dom";
 
 const BillPage = () => {
   const [bills, setBills] = useState([]);
+  const [tenantDetails, setTenantDetails] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const componentRefs = useRef({});
   const [shouldPrint, setShouldPrint] = useState(false);
-  const location = useLocation(); // Import useLocation from 'react-router-dom'
+  const location = useLocation();
 
   useEffect(() => {
     if (location.state && location.state.fromCart) {
@@ -31,19 +32,29 @@ const BillPage = () => {
   }, [shouldPrint, bills]);
 
   useEffect(() => {
-    const fetchBills = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/bills");
-        setBills(response.data.reverse()); // Reverse the array to show latest bills first
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        const [billsResponse, tenantResponse] = await Promise.all([
+          axios.get("http://localhost:5000/api/bills", { headers }),
+          axios.get("http://localhost:5000/api/tenant/details", { headers }),
+        ]);
+
+        setBills(billsResponse.data.reverse());
+        setTenantDetails(tenantResponse.data);
       } catch (error) {
-        setError("Error fetching bills. Please try again later.");
-        console.error("Error fetching bills:", error);
+        setError("Error fetching data. Please try again later.");
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBills();
+    fetchData();
   }, []);
 
   const filteredBills = useMemo(() => {
@@ -193,6 +204,7 @@ const BillPage = () => {
           <PrintComponent
             ref={(el) => (componentRefs.current[bill.id] = el)}
             bill={bill}
+            tenantDetails={tenantDetails}
           />
         </div>
       ))}

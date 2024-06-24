@@ -22,8 +22,14 @@ const CreateTax = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        const token = localStorage.getItem("token");
         const productsResponse = await axios.get(
-          "http://localhost:5000/api/products"
+          "http://localhost:5000/api/products",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const productsData = productsResponse.data;
 
@@ -88,10 +94,15 @@ const CreateTax = () => {
       const filteredTaxData = Object.fromEntries(
         Object.entries(taxData).filter(([key, value]) => value !== "")
       );
-
+      const token = localStorage.getItem("token");
       const response = await axios.post(
         "http://localhost:5000/api/taxes",
-        filteredTaxData
+        filteredTaxData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       console.log("Tax created:", response.data);
       setSuccessMessage("Tax created successfully!");

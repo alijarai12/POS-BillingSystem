@@ -1,20 +1,27 @@
+// File: routes/discountRoutes.js
 const express = require('express');
 const router = express.Router();
-const discountController = require('../controllers/discountController');
+const authenticateToken=require('../middleware/auth.js');
+const checkPermission=require('../middleware/grantPermission');
 
-// POST /discounts
-router.post('/discounts', discountController.createDiscount);
+const {
+  createDiscount,
+  getAllDiscounts,
+  updateDiscount,
+  deleteDiscount,
+} = require('../controllers/discountController');
 
-// GET /discounts
-router.get('/discounts', discountController.getAllDiscounts);
 
-// GET /discounts/:id
-router.get('/discounts/:id', discountController.getDiscountById);
+// Create a new discount
+router.post('/discounts', authenticateToken, checkPermission("Manage discount"), createDiscount);
 
-// PUT /discounts/:id
-router.put('/discounts/:id', discountController.updateDiscount);
+// Get all discounts with associated products and variants
+router.get('/discounts', authenticateToken, checkPermission("Manage discount"), getAllDiscounts);
 
-// DELETE /discounts/:id
-router.delete('/discounts/:id', discountController.deleteDiscount);
+// Update an existing discount
+router.put('/discounts/:discountId', authenticateToken, checkPermission("Manage discount"), updateDiscount);
+
+// Delete a discount
+router.delete('/discounts/:discountId', authenticateToken, checkPermission("Manage discount"), deleteDiscount);
 
 module.exports = router;

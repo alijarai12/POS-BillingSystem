@@ -277,9 +277,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </li>
         ) : null}
 
-        {userPermissions.includes("Manage Permissions") ||
-        isSuperAdmin ||
-        isStoreAdmin ? (
+        {userPermissions.includes("Manage Permissions") || isSuperAdmin ? (
           <li className="group">
             <button
               onClick={togglePermissions}
@@ -363,7 +361,39 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </Link>
           </li>
         ) : null}
-
+        {userPermissions.includes("Manage Bill") || isStoreAdmin ? (
+          <li>
+            <Link
+              to="/bill"
+              className="flex items-center py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300"
+            >
+              <RiBillFill className="mr-3" />
+              Bill
+            </Link>
+          </li>
+        ) : null}
+        {userPermissions.includes("Manage Bill") || isStoreAdmin ? (
+          <li>
+            <Link
+              to="/discounts"
+              className="flex items-center py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300"
+            >
+              <MdDiscount className="mr-3" />
+              Disocunt
+            </Link>
+          </li>
+        ) : null}
+        {userPermissions.includes("Manage Bill") || isStoreAdmin ? (
+          <li>
+            <Link
+              to="/tax"
+              className="flex items-center py-2 px-4 bg-gray-800 rounded-md hover:bg-gray-700 transition duration-300"
+            >
+              <MdDiscount className="mr-3" />
+              TAX
+            </Link>
+          </li>
+        ) : null}
         {userPermissions.includes("Manage Sales and Billing") ||
         isSuperAdmin ||
         isStoreAdmin ? (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Spinner } from "@nextui-org/react";
 import Select from "react-select";
+import { Input, Button, Card, CardHeader, CardBody } from "@nextui-org/react";
 
 const CreateDiscount = () => {
   const [discountData, setDiscountData] = useState({
@@ -10,40 +10,63 @@ const CreateDiscount = () => {
     value: "",
     startDate: "",
     endDate: "",
-    selectedOption: null, // New state to hold the selected option
+    selectedOptions: [],
+    tenant_id: null,
   });
-  const [dropdownOptions, setDropdownOptions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [options, setOptions] = useState([]);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        const token = localStorage.getItem("token");
+
+        const userResponse = await axios.get(
+          "http://localhost:5000/auth/tenant",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const tenantId = userResponse.data.tenant_id;
+
+        setDiscountData((prevState) => ({
+          ...prevState,
+          tenant_id: tenantId,
+        }));
+
         const productsResponse = await axios.get(
-          "http://localhost:5000/api/products"
+          "http://localhost:5000/api/products",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const productsData = productsResponse.data;
 
         const options = productsData.flatMap((product) => {
           const productOption = {
-            value: product.productId,
+            value: `product_${product.productId}`,
             label: product.productname,
             isProduct: true,
+            data: product,
           };
 
           const variantOptions = product.variants.map((variant) => ({
-            value: variant.variantId,
+            value: `variant_${variant.variantId}`,
             label: `${product.productname} - ${variant.name}`,
             isProduct: false,
-            parentProductId: product.productId,
+            data: variant,
           }));
 
           return [productOption, ...variantOptions];
         });
 
-        setDropdownOptions(options);
+        setOptions(options);
       } catch (error) {
         console.error("Error fetching data:", error);
         setError("Failed to fetch products and variants. Please try again.");
@@ -63,225 +86,188 @@ const CreateDiscount = () => {
     }));
   };
 
-  const handleProductVariantChange = (selectedOption) => {
+  const handleOptionsSelect = (selectedOptions) => {
     setDiscountData((prevState) => ({
       ...prevState,
-      selectedOption,
+      selectedOptions,
     }));
-    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
-    setSuccessMessage("");
+    setIsLoading(true);
 
     try {
-      const filteredDiscountData = Object.fromEntries(
-        Object.entries(discountData).filter(([key, value]) => value !== "")
-      );
-
       const requestData = {
-        ...filteredDiscountData,
-        productId: discountData.selectedOption?.isProduct
-          ? discountData.selectedOption.value
-          : null,
-        variantId: !discountData.selectedOption?.isProduct
-          ? discountData.selectedOption.value
-          : null,
+        name: discountData.name,
+        type: discountData.type,
+        value: parseFloat(discountData.value),
+        startDate: discountData.startDate,
+        endDate: discountData.endDate,
+        productIds: discountData.selectedOptions
+          .filter((option) => option.isProduct)
+          .map((option) => option.data.productId),
+        variantIds: discountData.selectedOptions
+          .filter((option) => !option.isProduct)
+          .map((option) => option.data.variantId),
+        tenant_id: discountData.tenant_id,
       };
+
+      const token = localStorage.getItem("token");
 
       const response = await axios.post(
         "http://localhost:5000/api/discounts",
-        requestData
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      console.log("Discount created:", response.data);
-      setSuccessMessage("Discount created successfully!");
-      setDiscountData({
+
+      console.log("Discount created successfully:", response.data);
+
+      setDiscountData((prevState) => ({
         name: "",
         type: "percentage",
         value: "",
         startDate: "",
         endDate: "",
-        selectedOption: null,
-      });
+        selectedOptions: [],
+        tenant_id: prevState.tenant_id,
+      }));
     } catch (error) {
       console.error("Error creating discount:", error);
-      setError(
-        error.response?.data?.error ||
-          "Failed to create discount. Please try again."
-      );
+
+      if (error.response) {
+        setError(
+          `Failed to create discount: ${JSON.stringify(error.response.data)}`
+        );
+      } else {
+        setError(`Failed to create discount: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const isFormValid = () => {
+    const { name, value, startDate, endDate, selectedOptions } = discountData;
+    return name && value && startDate && endDate && selectedOptions.length > 0;
+  };
+
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="max-w-lg w-full bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Create Discount Product or Variant
-        </h1>
-        {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
-        {successMessage && (
-          <p className="text-green-600 mb-4 text-center">{successMessage}</p>
-        )}
-        <form onSubmit={handleSubmit}>
-          {/* Form fields */}
-          <div className="mb-4">
-            <label
-              htmlFor="name"
-              className="block text-sm font-semibold mb-1 text-gray-700"
-            >
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={discountData.name}
-              onChange={handleChange}
-              placeholder="Enter discount name"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="type"
-              className="block text-sm font-semibold mb-1 text-gray-700"
-            >
-              Discount Type
-            </label>
-            <select
-              id="type"
-              name="type"
-              value={discountData.type}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="percentage">Percentage</option>
-              <option value="fixed">Fixed Amount</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="value"
-              className="block text-sm font-semibold mb-1 text-gray-700"
-            >
-              Discount Value
-            </label>
-            <input
-              type="number"
-              id="value"
-              name="value"
-              value={discountData.value}
-              onChange={handleChange}
-              placeholder="Enter discount value"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="startDate"
-              className="block text-sm font-semibold mb-1 text-gray-700"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={discountData.startDate}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="endDate"
-              className="block text-sm font-semibold mb-1 text-gray-700"
-            >
-              End Date
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={discountData.endDate}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="productId"
-              className="block text-sm font-semibold mb-1 text-gray-700"
-            >
-              Product or Variant
-            </label>
-            <Select
-              id="productId"
-              name="productId"
-              value={discountData.selectedOption}
-              onChange={handleProductVariantChange}
-              options={dropdownOptions}
-              placeholder="Select Product or Variant"
-              className="w-full"
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "0.375rem",
-                  boxShadow: "none",
-                  "&:hover": {
-                    border: "1px solid #3b82f6",
-                  },
-                }),
-                option: (base, { isDisabled, isFocused, isSelected }) => ({
-                  ...base,
-                  backgroundColor: isDisabled
-                    ? null
-                    : isSelected
-                    ? "#3b82f6"
-                    : isFocused
-                    ? "#e0f2fe"
-                    : null,
-                  color: isDisabled ? "#ccc" : isSelected ? "white" : "black",
-                  cursor: isDisabled ? "not-allowed" : "default",
-                }),
-                menu: (base) => ({
-                  ...base,
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                }),
-              }}
-              formatOptionLabel={(option) => (
-                <span style={{ paddingLeft: option.isProduct ? 0 : 20 }}>
-                  {option.label}
-                </span>
-              )}
-            />
-          </div>
-          <div className="flex justify-center">
-            <button
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <Card className="w-full max-w-lg p-8">
+        <CardHeader>
+          <h2 className="text-center mb-6">Create Discount</h2>
+        </CardHeader>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <CardBody>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <Input
+                clearable
+                underlined
+                fullWidth
+                label="Name"
+                id="name"
+                name="name"
+                value={discountData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="type"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Type
+              </label>
+              <select
+                id="type"
+                name="type"
+                value={discountData.type}
+                onChange={handleChange}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                required
+              >
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed Amount</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <Input
+                clearable
+                underlined
+                fullWidth
+                label="Value"
+                type="number"
+                id="value"
+                name="value"
+                value={discountData.value}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <Input
+                clearable
+                underlined
+                fullWidth
+                label="Start Date"
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={discountData.startDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <Input
+                clearable
+                underlined
+                fullWidth
+                label="End Date"
+                type="date"
+                id="endDate"
+                name="endDate"
+                value={discountData.endDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="options"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Products and Variants
+              </label>
+              <Select
+                id="options"
+                name="options"
+                options={options}
+                value={discountData.selectedOptions}
+                onChange={handleOptionsSelect}
+                isMulti
+              />
+            </div>
+            <Button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
-              disabled={isLoading}
+              className="w-full"
+              auto
+              disabled={isLoading || !isFormValid()}
             >
-              {isLoading ? (
-                <Spinner color="white" size="sm" />
-              ) : (
-                "Create Discount"
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+              {isLoading ? "Creating..." : "Create Discount"}
+            </Button>
+          </form>
+        </CardBody>
+      </Card>
     </div>
   );
 };

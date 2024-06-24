@@ -10,18 +10,25 @@ const DiscountList = () => {
   const [selectedDiscountId, setSelectedDiscountId] = useState(null);
 
   useEffect(() => {
+    const fetchDiscounts = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          "http://localhost:5000/api/discounts",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setDiscounts(response.data);
+      } catch (error) {
+        console.error("Error fetching discounts:", error);
+        setError("Failed to fetch discounts. Please try again later.");
+      }
+    };
     fetchDiscounts();
   }, []);
-
-  const fetchDiscounts = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/discounts");
-      setDiscounts(response.data);
-    } catch (error) {
-      console.error("Error fetching discounts:", error);
-      setError("Failed to fetch discounts. Please try again later.");
-    }
-  };
 
   const updateDiscountedPriceInDB = async (
     itemType,
@@ -29,11 +36,17 @@ const DiscountList = () => {
     discountedPrice
   ) => {
     try {
-      const endpoint =
-        itemType === "product"
-          ? `http://localhost:5000/api/products/${itemId}`
-          : `http://localhost:5000/api/variants/${itemId}`;
-      await axios.put(endpoint, { discountedPrice });
+      const token = localStorage.getItem("token");
+      const endpoint = `http://localhost:5000/api/${itemType}s/${itemId}`;
+      await axios.put(
+        endpoint,
+        { discountedPrice },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
     } catch (error) {
       console.error(`Error updating discounted price for ${itemType}:`, error);
     }
@@ -41,7 +54,12 @@ const DiscountList = () => {
 
   const deleteDiscount = async (discountId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/discounts/${discountId}`);
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/discounts/${discountId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setDiscounts(
         discounts.filter((discount) => discount.discountId !== discountId)
       );
@@ -51,31 +69,41 @@ const DiscountList = () => {
     }
   };
 
+  const formatCurrency = (value) => `$${value.toFixed(2)}`;
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
   const calculateDiscountedPrice = (item, discount) => {
-    const originalPrice = item.price;
+    if (!item) {
+      return { discountedPrice: 0, discountAmount: 0 };
+    }
+
+    const originalPrice = item.price || 0;
+    const discountValue = discount.value || 0;
+    const discountType = discount.type || "percentage";
+
     let discountAmount = 0;
 
-    if (discount.type === "percentage") {
-      discountAmount = (originalPrice * discount.value) / 100;
-    } else if (discount.type === "fixed") {
-      discountAmount = discount.value;
+    if (discountType === "percentage") {
+      discountAmount = (originalPrice * discountValue) / 100;
+    } else if (discountType === "fixed") {
+      discountAmount = discountValue;
     }
 
     const discountedPrice = originalPrice - discountAmount;
-    const itemType = item.productname ? "product" : "variant";
-    const itemId = item.productname ? item.productId : item.variantId;
 
-    // Check if the discount has expired
     const currentDate = new Date();
     const endDate = new Date(discount.endDate);
+
     if (currentDate > endDate) {
-      // If end date has passed, update discounted price in database
-      updateDiscountedPriceInDB(itemType, itemId, originalPrice);
+      updateDiscountedPriceInDB(item.itemType, item.itemId, originalPrice);
       return { discountedPrice: originalPrice, discountAmount: 0 };
     }
 
-    // Update the discounted price in the database
-    updateDiscountedPriceInDB(itemType, itemId, discountedPrice);
+    updateDiscountedPriceInDB(item.itemType, item.itemId, discountedPrice);
 
     return { discountedPrice, discountAmount };
   };
@@ -98,58 +126,75 @@ const DiscountList = () => {
       value,
       startDate,
       endDate,
-      product,
-      variant,
+      products,
+      variants,
     } = discount;
 
-    const item = product || variant;
-
-    let itemType, itemName, itemSKU, itemPrice, discountedPrice, discountAmount;
-
-    if (item) {
-      itemType = product ? "Product" : "Variant";
-      itemName = product ? product.productname : variant.name;
-      itemSKU = item.SKU;
-      itemPrice = item.price;
-
-      ({ discountedPrice, discountAmount } = calculateDiscountedPrice(
-        item,
-        discount
-      ));
-    } else {
-      itemType = "N/A";
-      itemName = "N/A";
-      itemSKU = "N/A";
-      itemPrice = 0;
-      discountedPrice = 0;
-      discountAmount = 0;
-    }
+    const combinedItems = [
+      ...(products || []).map((product) => ({
+        ...product,
+        itemType: "Product",
+        itemId: product.productId,
+      })),
+      ...(variants || []).map((variant) => ({
+        ...variant,
+        itemType: "Variant",
+        itemId: variant.variantId,
+      })),
+    ];
 
     return (
-      <tr
-        key={discountId}
-        className={product ? "border-t" : "border-t bg-gray-100"}
-      >
+      <tr key={discountId} className="border-t">
         <td className="p-2">{name}</td>
         <td className="p-2">{type}</td>
         <td className="p-2">
-          {type === "percentage" ? `${value}%` : `$${value}`}
+          {type === "percentage" ? `${value}%` : formatCurrency(value)}
         </td>
-        <td className="p-2">{new Date(startDate).toLocaleDateString()}</td>
-        <td className="p-2">{new Date(endDate).toLocaleDateString()}</td>
+        <td className="p-2">{formatDate(startDate)}</td>
+        <td className="p-2">{formatDate(endDate)}</td>
         <td className="p-2">
-          <strong>{itemType}:</strong> {itemName}
-          <br />
-          <strong>SKU:</strong> {itemSKU}
-          <br />
-          <strong>Original Price:</strong> ${itemPrice.toFixed(2)}
-          <br />
-          <strong>Discount Applied:</strong>
-          {type === "percentage"
-            ? `${discountAmount.toFixed(2)} (${value}%)`
-            : `$${discountAmount.toFixed(2)}`}
-          <br />
-          <strong>Discounted Price:</strong> ${discountedPrice.toFixed(2)}
+          {combinedItems.map((item, index) => {
+            const { discountedPrice, discountAmount } =
+              calculateDiscountedPrice(item, discount);
+
+            return (
+              <div
+                key={`${discountId}_${item.itemType}_${index}`}
+                className="mb-4 p-2 bg-gray-100 rounded"
+              >
+                <div className="mb-2">
+                  <strong className="text-gray-700">{item.itemType}:</strong>
+                  <span className="ml-2 text-gray-900">
+                    {item.itemType === "Product" ? item.productname : item.name}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <strong className="text-gray-700">SKU:</strong>
+                  <span className="ml-2 text-gray-900">{item.SKU}</span>
+                </div>
+                <div className="mb-2">
+                  <strong className="text-gray-700">Original Price:</strong>
+                  <span className="ml-2 text-gray-900">
+                    {formatCurrency(item.price)}
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <strong className="text-gray-700">Discount Applied:</strong>
+                  <span className="ml-2 text-gray-900">
+                    {type === "percentage"
+                      ? `${discountAmount.toFixed(2)} (${value}%)`
+                      : formatCurrency(discountAmount)}
+                  </span>
+                </div>
+                <div>
+                  <strong className="text-gray-700">Discounted Price:</strong>
+                  <span className="ml-2 text-gray-900">
+                    {formatCurrency(discountedPrice)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </td>
         <td className="p-2 flex space-x-2">
           <button
@@ -202,11 +247,13 @@ const DiscountList = () => {
           <tbody>{discounts.map(renderDiscountRow)}</tbody>
         </table>
       )}
-      <UpdateDiscountModal
-        isOpen={isModalOpen}
-        handleClose={closeModal}
-        discountId={selectedDiscountId}
-      />
+      {isModalOpen && (
+        <UpdateDiscountModal
+          isOpen={isModalOpen}
+          handleClose={closeModal}
+          discountId={selectedDiscountId}
+        />
+      )}
     </div>
   );
 };
