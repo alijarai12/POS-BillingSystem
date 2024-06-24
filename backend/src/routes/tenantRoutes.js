@@ -1,7 +1,7 @@
 // routes/userRoutes.js
 
 const express = require('express');
-const { getAllTenants } = require('../controllers/tenantController');
+const { getAllTenants, getTenantDetails } = require('../controllers/tenantController');
 const authenticateToken = require('../middleware/auth.js');
 
 const router = express.Router();
@@ -12,6 +12,6 @@ const router = express.Router();
 
 // Get all tenant
 router.get('/', authenticateToken,  getAllTenants);
-
+router.get('/tenants/:tenantId', authenticateToken, getTenantDetails);
 
 module.exports = router;

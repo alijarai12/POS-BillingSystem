@@ -1,43 +1,81 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import JsBarcode from 'jsbarcode';
+import React, { useState, useEffect, useRef, useContext } from "react";
+import axios from "axios";
+import { CartContext } from "../context/CartContext";
+import JsBarcode from "jsbarcode";
 
 const VariantList = ({ productId }) => {
   const [variants, setVariants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const barcodeRefs = useRef([]);
+  const { addToCart } = useContext(CartContext);
+
+  const fetchVariants = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authentication token not found");
+        setLoading(false);
+        return;
+      }
+      const response = await axios.get("http://localhost:5000/api/variants", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setVariants(response.data);
+      setLoading(false);
+    } catch (error) {
+      setError("Failed to fetch variants");
+      console.error("There was an error fetching the variants!", error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchVariants();
   }, []);
 
-  const fetchVariants = async () => {
-    try {
-      const response = await axios.get(`http://localhost:5000/api/variants`);
-      setVariants(response.data);
-      setLoading(false);
-    } catch (error) {
-      setError('Failed to fetch variants');
-      console.error('There was an error fetching the variants!', error);
-      setLoading(false);
+  const handleAddToCart = async (variant) => {
+    if (variant.stock > 0) {
+      const priceToAdd = variant.discountedPrice
+        ? variant.discountedPrice
+        : variant.price;
+
+      try {
+        // Update stock in the database
+        const token = localStorage.getItem("token");
+        await axios.put(
+          `http://localhost:5000/api/variants/${variant.variantId}`,
+
+          {
+            stock: variant.stock - 1,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Add the variant to the cart
+        await addToCart({ ...variant, price: priceToAdd }, 1);
+
+        // Update the local state with the new stock value
+        const updatedVariants = variants.map((v) =>
+          v.variantId === variant.variantId ? { ...v, stock: v.stock - 1 } : v
+        );
+        setVariants(updatedVariants);
+
+        // Update local storage with updated stock
+        localStorage.setItem("variants", JSON.stringify(updatedVariants));
+      } catch (error) {
+        console.error("There was an error updating the stock!", error);
+      }
+    } else {
+      alert("Variant out of stock");
     }
   };
-
-  // useEffect(() => {
-  //   variants.forEach((variant, index) => {
-  //     generateBarcode(variant.barcode, index);
-  //   });
-  // }, [variants]);
-
-  // const generateBarcode = (barcodeValue, index) => {
-  //   if (barcodeRefs.current[index]) {
-  //     JsBarcode(barcodeRefs.current[index], barcodeValue, {
-  //       format: 'CODE128',
-  //     });
-  //   }
-  // };
-
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -56,12 +94,15 @@ const VariantList = ({ productId }) => {
             <p>Value: {variant.value}</p>
             <p>SKU: {variant.SKU}</p>
             <p>Price: ${variant.price}</p>
+            <p>Discount price: {variant.discountedPrice}</p>
             <p>Stock: {variant.stock}</p>
-            <p>Size:{variant.size}</p>
-            {/* <svg
-              ref={(ref) => (barcodeRefs.current[index] = ref)}
-              className="barcode"
-            ></svg> */}
+            <p>Size: {variant.size}</p>
+            <button
+              onClick={() => handleAddToCart(variant)}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Add to Cart
+            </button>
           </li>
         ))}
       </ul>

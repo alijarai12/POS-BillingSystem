@@ -8,7 +8,7 @@ const ProductList = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [filter, setFilter] = useState({
     category: "",
-    brand: ""
+    brand: "",
   });
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -18,10 +18,12 @@ const ProductList = () => {
   }, []);
 
   useEffect(() => {
-    const categories = [...new Set(products.map(product => product.category))];
+    const categories = [
+      ...new Set(products.map((product) => product.category)),
+    ];
     setCategories(categories);
 
-    const brands = [...new Set(products.map(product => product.brand))];
+    const brands = [...new Set(products.map((product) => product.brand))];
     setBrands(brands);
 
     applyFilters();
@@ -50,9 +52,7 @@ const ProductList = () => {
     }
 
     if (filter.brand) {
-      filtered = filtered.filter(
-        (product) => product.brand === filter.brand
-      );
+      filtered = filtered.filter((product) => product.brand === filter.brand);
     }
 
     setFilteredProducts(filtered);
@@ -63,7 +63,9 @@ const ProductList = () => {
       <div className="flex flex-row justify-between">
         <h2 className="text-2xl font-bold mb-6 text-gray-700">Product List</h2>
         <Link to={`/products/add-products`}>
-          <Button color="primary" variant="flat">+ Add Products</Button>
+          <Button color="primary" variant="flat">
+            + Add Products
+          </Button>
         </Link>
       </div>
       <div className="flex justify-end mb-4">
@@ -89,22 +91,31 @@ const ProductList = () => {
             </SelectItem>
           ))}
         </Select>
-        <Button color="secondary" onClick={applyFilters}>Apply Filters</Button>
+        <Button color="secondary" onClick={applyFilters}>
+          Apply Filters
+        </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
-        {(filteredProducts.length ? filteredProducts : products).map((product) => (
-          <div key={product.productId} className="border-t p-4 rounded-lg shadow-lg">
-            <h3 className="text-lg font-bold mb-2">{product.name}</h3>
-            <p className="text-gray-700 mb-2">Price: ${product.price}</p>
-            <p className="text-gray-700 mb-2">Stock: {product.stock}</p>
-            <p className="text-gray-700 mb-2">Category: {product.category}</p>
-            <p className="text-gray-700 mb-2">Brand: {product.brand}</p>
-            <p className="text-gray-700 mb-2">Company: {product.company}</p>
-            <Link to={`/products/${product.productId}`}>
-              <Button color="warning" size="sm">View Details</Button>
-            </Link>
-          </div>
-        ))}
+        {(filteredProducts.length ? filteredProducts : products).map(
+          (product) => (
+            <div
+              key={product.productId}
+              className="border-t p-4 rounded-lg shadow-lg"
+            >
+              <h3 className="text-lg font-bold mb-2">{product.productname}</h3>
+              <p className="text-gray-700 mb-2">Price: ${product.price}</p>
+              <p className="text-gray-700 mb-2">Stock: {product.stock}</p>
+              <p className="text-gray-700 mb-2">Category: {product.category}</p>
+              <p className="text-gray-700 mb-2">Brand: {product.brand}</p>
+              <p className="text-gray-700 mb-2">Company: {product.company}</p>
+              <Link to={`/products/${product.productId}`}>
+                <Button color="warning" size="sm">
+                  View Details
+                </Button>
+              </Link>
+            </div>
+          )
+        )}
       </div>
     </div>
   );

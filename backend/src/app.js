@@ -17,8 +17,11 @@ const permissionRoutes = require('./routes/permissionRoutes');
 const userPermissionRoutes = require('./routes/userPermissionRoutes'); 
 const passwordRoutes = require('./routes/passwordRoutes');
 const authenticateToken = require('./middleware/auth');
-
-
+const billRoutes = require('./routes/billRoutes');
+const taxRoutes = require('./routes/taxRoutes');
+const productRoutes = require('./routes/productRoutes');
+const variantRoutes= require('./routes/variantRoutes');
+const discountRoutes= require('./routes/discountRoutes');
 const app = express();
 
 // Middleware
@@ -38,6 +41,11 @@ app.use('/auth/staff', staffRoutes);
 app.use('/auth/permission', permissionRoutes);
 app.use('/auth/userpermission', userPermissionRoutes);
 app.use('/auth/password', passwordRoutes);
+app.use('/api',billRoutes);
+app.use('/api', taxRoutes);
+app.use('/api', productRoutes);
+app.use('/api',variantRoutes);
+app.use('/api',discountRoutes);
 
 
 
