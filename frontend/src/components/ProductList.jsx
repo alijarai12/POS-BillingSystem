@@ -15,6 +15,16 @@ const ProductList = () => {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    products.forEach((product) => {
+      if (product.stock <= product.threshold) {
+        alert(
+          `Low Stock Alert: ${product.productname} is running low on stock!`
+        );
+      }
+    });
+  }, [products]);
+
   const fetchProducts = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/products");
@@ -47,31 +57,52 @@ const ProductList = () => {
     return (
       (filters.category === "" || product.category === filters.category) &&
       (filters.brand === "" || product.brand === filters.brand) &&
-      (searchQuery === "" || product.productname.toLowerCase().includes(searchQuery))
+      (searchQuery === "" ||
+        product.productname.toLowerCase().includes(searchQuery))
     );
   });
 
   return (
     <div className="container mx-auto">
       <div className="flex flex-row justify-between">
-        <h2 className="text-2xl font-bold mb-6 text-gray-700">Product List</h2>
-        <Link to={`/products/add-products`}>
-          <Button color="primary" variant="flat">
-            + Add Products
-          </Button>
-        </Link>
+        <h2 className="font-bold text-3xl font-roboto text-violet-800">
+          Product List
+        </h2>
+        <div >
+          <Link to={`/products/add-products`}>
+            <Button
+              color="secondary"
+              variant="ghost"
+              size="sm"
+              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg border-none mr-2"
+            >
+              + Products
+            </Button>
+          </Link>
+          <Link to={`/products/add-bulk`}>
+            <Button
+              color="secondary"
+              variant="ghost"
+              size="sm"
+              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg border-none"
+            >
+              + Bulk
+            </Button>
+          </Link>
+        </div>
       </div>
-      <Card className="flex flex-col gap-4 p-4 mb-2">
+      <div className="flex flex-col gap-4 py-3 my-2 border-none bg-inherit">
         <div className="flex justify-between gap-2 items-center flex-wrap">
           <Input
             id="searchQuery"
             type="text"
-            placeholder="Search"
+            placeholder="Search..."
             value={searchQuery}
+            labelPlacement="outside"
             onChange={handleSearchChange}
             size="sm"
             classNames={{
-              base: "w-full sm:max-w-[49%]",
+              base: "w-full sm:max-w-[30%]",
               inputWrapper: "border-1 px-2 py-0 h-[40px] text-sm",
             }}
             startContent={<FaSearch className="text-default-300" />}
@@ -83,10 +114,8 @@ const ProductList = () => {
               value={filters.category}
               onChange={handleFilterChange}
               placeholder="Select a Category"
-              size="md"
-              className="rounded-lg w-[150px]"
-          
-              // className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              size="sm"
+              className="rounded-lg w-[150px] hover"
             >
               {categories.map((category) => (
                 <SelectItem key={category} value={category}>
@@ -96,11 +125,11 @@ const ProductList = () => {
             </Select>
             <Select
               id="brandFilter"
-              name="brand" 
+              name="brand"
               value={filters.brand}
               onChange={handleFilterChange}
               placeholder="Select a brand"
-              size="md"
+              size="sm"
               className="rounded-lg w-[150px]"
             >
               {brands.map((brand) => (
@@ -111,7 +140,7 @@ const ProductList = () => {
             </Select>
           </div>
         </div>
-      </Card>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProducts.length === 0 ? (
@@ -120,19 +149,25 @@ const ProductList = () => {
           filteredProducts.map((product) => (
             <div
               key={product.productId}
-              className="border-t p-4 rounded-lg shadow-lg"
+              className="border-t rounded-lg shadow-lg overflow-hidden hover:shadow-xl"
             >
-              <h3 className="text-lg font-bold mb-2">{product.productname}</h3>
-              <p className="text-gray-700 mb-2">Price: ${product.price}</p>
-              <p className="text-gray-700 mb-2">Stock: {product.stock}</p>
-              <p className="text-gray-700 mb-2">Category: {product.category}</p>
-              <p className="text-gray-700 mb-2">Brand: {product.brand}</p>
-              <p className="text-gray-700 mb-2">Company: {product.company}</p>
               <Link to={`/products/${product.productId}`}>
-                <Button color="warning" size="sm">
-                  View Details
-                </Button>
+                <img
+                  src={
+                    product.image
+                      ? `http://localhost:5000/uploads/images/${product.image}`
+                      : "https://plus.unsplash.com/premium_photo-1676637000058-96549206fe71?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  }
+                  alt={product.productname}
+                  className="object-cover h-56 w-full cursor-pointer"
+                />
               </Link>
+              <div className="p-3 flex flex-row justify-between">
+                <h3 className="text-lg font-semibold text-black">
+                  {product.productname}
+                </h3>
+                <p className="text-lg text-rose-700	">$ {product.price}</p>
+              </div>
             </div>
           ))
         )}

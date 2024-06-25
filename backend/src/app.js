@@ -10,8 +10,11 @@ const userRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const variantRoutes = require("./routes/variantRoutes");
 const uploadRoutes= require("./routes/uploadRoutes")
-
+const expenseRoutes= require("./routes/expenseRoutes")
+const billRoutes= require("./routes/billRoutes")
 const app = express();
+const path = require('path');
+
 // const storage= multer.diskStorage({
 //   destination: function(req, file, cb){
 //     cb(null,'./uploads')
@@ -33,6 +36,10 @@ app.use("/api/user", userRoutes); // Prefixing routes with /api
 app.use("/api", productRoutes);
 app.use("/api", variantRoutes);
 app.use("/api", uploadRoutes);
+app.use('/api', expenseRoutes);
+app.use('/api',billRoutes)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Sample function
 app.get("/", (req, res) => {

@@ -1,36 +1,87 @@
-import React from 'react';
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import React from "react";
+import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white py-8">
+    <footer className="bg-gray-800 text-white py-8">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="mb-4 md:mb-0">
-            <h2 className="text-2xl font-bold">MyApp</h2>
-            <p className="text-gray-400">© 2024 MyApp. All rights reserved.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="col-span-2 lg:col-span-1">
+            <h2 className="text-xl font-bold mb-4">About Us</h2>
+            <p className="text-sm">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+            <div className="flex mt-4">
+              <a href="#" className="mr-4">
+                <FaFacebook className="text-white hover:text-gray-400 transition duration-300" />
+              </a>
+              <a href="#" className="mr-4">
+                <FaTwitter className="text-white hover:text-gray-400 transition duration-300" />
+              </a>
+              <a href="#" className="mr-4">
+                <FaLinkedin className="text-white hover:text-gray-400 transition duration-300" />
+              </a>
+              <a href="#" className="mr-4">
+                <FaInstagram className="text-white hover:text-gray-400 transition duration-300" />
+              </a>
+            </div>
           </div>
-          <ul className="flex space-x-4 mb-4 md:mb-0">
-            <li><a href="#" className="hover:text-gray-300 transition duration-300">Home</a></li>
-            <li><a href="#" className="hover:text-gray-300 transition duration-300">About</a></li>
-            <li><a href="#" className="hover:text-gray-300 transition duration-300">Services</a></li>
-            <li><a href="#" className="hover:text-gray-300 transition duration-300">Contact</a></li>
-          </ul>
-          <div className="flex space-x-4">
-            <a href="#" className="text-gray-400 hover:text-gray-300 transition duration-300">
-              <FaFacebook size={24} />
-            </a>
-            <a href="#" className="text-gray-400 hover:text-gray-300 transition duration-300">
-              <FaTwitter size={24} />
-            </a>
-            <a href="#" className="text-gray-400 hover:text-gray-300 transition duration-300">
-              <FaInstagram size={24} />
-            </a>
-            <a href="#" className="text-gray-400 hover:text-gray-300 transition duration-300">
-              <FaLinkedin size={24} />
-            </a>
+          <div>
+            <h2 className="text-xl font-bold mb-4">Quick Links</h2>
+            <ul className="text-sm">
+              <li className="mb-2">
+                <Link
+                  href="#"
+                  className="hover:text-gray-400 transition duration-300"
+                >
+                  Home
+                </Link>
+              </li>
+              <li className="mb-2">
+                <a
+                  href="#"
+                  className="hover:text-gray-400 transition duration-300"
+                >
+                  Products
+                </a>
+              </li>
+              <li className="mb-2">
+                <a
+                  href="#"
+                  className="hover:text-gray-400 transition duration-300"
+                >
+                  Services
+                </a>
+              </li>
+              <li className="mb-2">
+                <a
+                  href="#"
+                  className="hover:text-gray-400 transition duration-300"
+                >
+                  Contact
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-4">Contact Us</h2>
+            <p className="text-sm">
+              123 Main Street, Cityville
+              <br />
+              State, Country
+              <br />
+              Email: info@example.com
+              <br />
+              Phone: +1 (123) 456-7890
+            </p>
           </div>
         </div>
+        <hr className="border-gray-600 my-8" />
+        <p className="text-sm text-center">
+          © {new Date().getFullYear()} Your Company. All Rights Reserved.
+        </p>
       </div>
     </footer>
   );

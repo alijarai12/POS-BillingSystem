@@ -1,6 +1,8 @@
 const express = require("express");
 const Variant = require("../models/Variant");
 const Product = require("../models/Product");
+const fs = require("fs");
+const path = require("path");
 // Create a new variant
 // exports.createVariant = async (req, res) => {
 //     try {
@@ -17,28 +19,44 @@ const Product = require("../models/Product");
 //   };
 exports.createVariant = async (req, res) => {
   try {
+    if (req.file) {
+      req.body.image = req.file.filename;
+    }
+
+    // Parse attributes if they are in JSON string format
+    if (typeof req.body.attributes === "string") {
+      req.body.attributes = JSON.parse(req.body.attributes);
+    }
+
     const {
       name,
-      value,
+      color,
       SKU,
       price,
       stock,
+      expiryDate,
+      purchaseprice,
+      threshold,
       barcode,
       image,
       weight,
       length,
       width,
       height,
-      attributes,
+      attributes = [], // Default to an empty array if undefined
       size,
       productId,
     } = req.body;
+
     const variant = await Variant.create({
       name,
-      value,
+      color,
       SKU,
       price,
       stock,
+      expiryDate,
+      purchaseprice,
+      threshold,
       barcode,
       image,
       weight,
@@ -49,12 +67,14 @@ exports.createVariant = async (req, res) => {
       attributes,
       productId,
     });
+
     res.status(201).json(variant);
   } catch (error) {
     console.error("Error creating variant:", error);
     res.status(500).json({ error: "Error creating variant" });
   }
 };
+
 // Get all variants
 // exports.getAllVariants = async (req, res) => {
 //   try {
@@ -162,24 +182,52 @@ exports.getVariantById = async (req, res) => {
 //       res.status(500).json({ error: 'Error updating variant' });
 //     }
 //   }
+
 exports.updateVariantById = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
 
   try {
+    console.log('Received data:', updateData);
+
+    // Check if attributes need to be parsed
+    if (updateData.attributes) {
+      if (typeof updateData.attributes === 'string') {
+        updateData.attributes = JSON.parse(updateData.attributes);
+      }
+    }
+
+    // Check if the barcode is unique
+    if (updateData.barcode) {
+      const existingVariant = await Variant.findOne({ where: { barcode: updateData.barcode } });
+      if (existingVariant && existingVariant.id !== parseInt(id, 10)) {
+        return res.status(400).json({ error: 'Barcode must be unique' });
+      }
+    }
+
     // Find the variant by ID
     const variant = await Variant.findByPk(id);
     if (variant) {
+      // Check if an image is uploaded
+      if (req.file) {
+        updateData.image = `${req.file.filename}`; // Store relative path
+      }
+
+      console.log('Final update data:', updateData);
+
       // Update the variant with the new data
       await variant.update(updateData);
       res.status(200).json(variant);
     } else {
-      res.status(404).json({ message: "Variant not found" });
+      res.status(404).json({ message: 'Variant not found' });
     }
   } catch (error) {
+    console.error('Update error:', error);
     res.status(500).json({ error: error.message });
   }
 };
+
+
 // Delete a variant by ID
 // exports.deleteVariant= async (req, res) => {
 //     const { id } = req.params;

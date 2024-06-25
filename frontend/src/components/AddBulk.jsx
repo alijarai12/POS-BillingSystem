@@ -11,7 +11,8 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
-import { FaCloudArrowUp } from "react-icons/fa6";
+import { FaFileCsv } from "react-icons/fa";
+import { FaDownload, FaUpload, FaEye } from "react-icons/fa";
 
 // Allowed extensions for input file
 const allowedExtensions = ["csv"];
@@ -34,6 +35,7 @@ const AddBulk = () => {
     // Check if user has entered the file
     if (e.target.files.length) {
       const inputFile = e.target.files[0];
+      console.log(inputFile);
       // Check the file extensions, if it not included in the allowed extensions we show the error
       const fileExtension = inputFile?.name.split(".").pop();
       if (!allowedExtensions.includes(fileExtension)) {
@@ -61,7 +63,8 @@ const AddBulk = () => {
       });
       const parsedData = csv?.data;
       const columns = csv?.meta?.fields;
-
+      console.log(parsedData);
+      console.log(columns);
       // Normalize data to ensure each row has the same number of cells as columns
       const normalizedData = parsedData.map((row) => {
         const normalizedRow = {};
@@ -78,9 +81,12 @@ const AddBulk = () => {
 
   const handleDownload = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/csv/download", {
-        responseType: "blob",
-      });
+      const response = await axios.get(
+        "http://localhost:5000/api/csv/download",
+        {
+          responseType: "blob",
+        }
+      );
 
       // Create a URL for the blob object
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -94,6 +100,31 @@ const AddBulk = () => {
       console.error("Error downloading the file", error);
     }
   };
+  const handleDownloadSample = async () => {
+    try {
+      // Make a GET request to download the sample CSV file
+      const response = await axios.get("http://localhost:5000/api/csv/sample", {
+        responseType: "blob", // Ensure the response type is set to blob
+      });
+
+      // Create a URL for the blob object
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+
+      // Create a temporary link element
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "sample.csv"); // Set the filename for the download
+      document.body.appendChild(link);
+
+      // Trigger the download
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading the sample file", error);
+    }
+  };
 
   const handleUpload = async () => {
     if (!file) return alert("Select a file to upload");
@@ -102,11 +133,15 @@ const AddBulk = () => {
     formData.append("file", file);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/csv/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/csv/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       alert("File uploaded successfully");
     } catch (error) {
       console.error("Error uploading the file", error);
@@ -115,15 +150,21 @@ const AddBulk = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6 text-violet-800 text-center">
+    <div className=" mx-auto p-4">
+      <h2 className="font-bold text-3xl font-roboto text-violet-800 text-center mb-6">
         Add Bulk Product
       </h2>
       <Card className="p-5 w-full">
         <div className="p-4">
           <div className="flex flex-row justify-between">
             <p>Select a CSV file:</p>
-            <Button onClick={handleDownload}>Download Sample</Button>
+            <Button
+              onClick={handleDownloadSample}
+              startContent={<FaDownload />}
+              className="bg-gradient-to-tl from-cyan-500 to-lime-500 text-white shadow-lg"
+            >
+              Download Sample
+            </Button>
           </div>
           <div className="p-2 rounded-lg w-[300px] h-[150px] flex flex-col items-center justify-center bg-gray-300 cursor-pointer hover:bg-blue-200 active:bg-blue-200 relative">
             <input
@@ -133,45 +174,62 @@ const AddBulk = () => {
               type="file"
               className="opacity-0 h-[150px] w-[300px] cursor-pointer absolute"
             />
-            <FaCloudArrowUp className="text-purple-400 hover:text-purple-600 h-16 w-16" />
+            <FaFileCsv className="text-purple-400 hover:text-purple-600 h-16 w-16" />
             <p className="text-sm">
               {file ? file.name : "Drag file here or click to upload"}
             </p>
           </div>
           <div className="mt-4 flex justify-between">
-            <Button onClick={handleParse}>Preview</Button>
-            <Button onClick={handleUpload}>Upload</Button>
+            <Button
+              onClick={handleParse}
+              startContent={<FaEye />}
+              className="bg-gradient-to-br from-teal-500 to-indigo-500 text-white shadow-lg"
+            >
+              Preview
+            </Button>
+            <Button
+              onClick={handleUpload}
+              startContent={<FaUpload />}
+              className="bg-gradient-to-tl from-cyan-500 to-lime-500 text-white shadow-lg"
+            >
+              Upload
+            </Button>
           </div>
+          <Button
+            onClick={handleDownload}
+            className="bg-gradient-to-br from-teal-500 to-indigo-500 text-white shadow-lg mt-2"
+          >
+            Export
+          </Button>
         </div>
-        <div className="mt-4 w-[800px] h-auto overflow-auto">
-  {data.columns.length > 0 && data.rows.length > 0 ? (
-    <Table className="w-full">
-      <TableHeader>
-        {data.columns &&
-          data.columns.map((key, index) => (
-            <TableColumn key={index}>{key}</TableColumn>
-          ))}
-      </TableHeader>
-      <TableBody>
-        {data.rows &&
-          data.rows.map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
-              {data.columns.map((col, colIndex) => (
-                <TableCell key={colIndex}>{row[col]}</TableCell>
-              ))}
-            </TableRow>
-          ))}
-      </TableBody>
-    </Table>
-  ) : (
-    <p className="font-semibold text-center text-xl p-4">
-      No data available
-    </p>
-  )}
-</div>
       </Card>
-      
 
+      <div className="mt-4 h-auto overflow-auto">
+        {data.columns.length > 0 && data.rows.length > 0 ? (
+          <Table>
+            <TableHeader>
+              {data.columns &&
+                data.columns.map((key, index) => (
+                  <TableColumn key={index}>{key}</TableColumn>
+                ))}
+            </TableHeader>
+            <TableBody>
+              {data.rows &&
+                data.rows.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {data.columns.map((col, colIndex) => (
+                      <TableCell key={colIndex}>{row[col]}</TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <p className="font-semibold text-xl p-4 text-violet-800 ">
+            No data available
+          </p>
+        )}
+      </div>
     </div>
   );
 };

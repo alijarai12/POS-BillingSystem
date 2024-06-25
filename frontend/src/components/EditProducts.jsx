@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Input, Textarea } from "@nextui-org/react";
-import { useNavigate } from "react-router-dom";
-import { Slide, ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import { Bounce, Slide, ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   Button,
   Modal,
@@ -15,12 +13,14 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { RiEdit2Fill, RiDeleteBin6Fill } from "react-icons/ri";
+import { FaImage } from "react-icons/fa6";
+import { productfields } from "./inputfields";
 
 const EditProducts = ({ productId, initialSKU }) => {
   const [formData, setFormData] = useState({
     productname: "",
     description: "",
-    SKU: initialSKU || "",  // Use initialSKU if provided
+    SKU: initialSKU || "", // Use initialSKU if provided
     price: "",
     stock: 0,
     category: "",
@@ -28,6 +28,7 @@ const EditProducts = ({ productId, initialSKU }) => {
     company: "",
     productId: productId || "",
   });
+  const [imageFile, setImageFile] = useState(null); // State for image file
 
   const {
     isOpen: isEditOpen,
@@ -42,7 +43,6 @@ const EditProducts = ({ productId, initialSKU }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Import useNavigate and create a navigate function
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -55,7 +55,7 @@ const EditProducts = ({ productId, initialSKU }) => {
         setFormData({
           productname: product.productname || "",
           description: product.description || "",
-          SKU: product.SKU || initialSKU || "",  // Ensure SKU is set correctly
+          SKU: product.SKU || initialSKU || "", // Ensure SKU is set correctly
           price: product.price || "",
           stock: product.stock || 0,
           category: product.category || "",
@@ -88,6 +88,10 @@ const EditProducts = ({ productId, initialSKU }) => {
       setFormData({ ...formData, [name]: value });
     }
   };
+  const handleImageChange = (e) => {
+    setImageFile(e.target.files[0]); // Set the selected image file
+    console.log(e.target.files[0])
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,13 +99,35 @@ const EditProducts = ({ productId, initialSKU }) => {
     setError(null);
 
     try {
+      const formDataWithImage = new FormData(); // Create a FormData object
+      formDataWithImage.append("image", imageFile); // Append the image file
+      // Append other form data fields
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataWithImage.append(key, value);
+      });
+
       const response = await axios.put(
         `http://localhost:5000/api/products/${productId}`,
-        formData
+        formDataWithImage,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data", // Set content type to multipart/form-data
+          },
+        }
       );
       console.log("Product updated:", response.data);
       setSuccess(true);
-      toast.success("Product updated successfully!", { transition: Slide });
+      toast.success("Product updated Successfully!", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
       onEditClose();
       setFormData({
         productname: "",
@@ -131,9 +157,18 @@ const EditProducts = ({ productId, initialSKU }) => {
       await axios.delete(`http://localhost:5000/api/products/${productId}`);
       console.log("Product deleted");
       setSuccess(true);
-      toast.success("Product deleted successfully!", { transition: Slide });
+      toast.success("Product deleted successfully!", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
       onDeleteClose();
-      navigate("/products");
     } catch (error) {
       setError("Failed to delete product");
       toast.error("Failed to delete product!", { transition: Slide });
@@ -142,24 +177,6 @@ const EditProducts = ({ productId, initialSKU }) => {
       setLoading(false);
     }
   };
-
-  const formFields = [
-    { id: "productname", label: "Product Name", type: "text", required: true },
-    { id: "description", label: "Description", type: "textarea" },
-    { id: "SKU", label: "SKU", type: "text", readOnly: true },  // Make SKU read-only
-    {
-      id: "price",
-      label: "Price",
-      type: "number",
-      required: true,
-      min: "0",
-      step: "0.01",
-    },
-    { id: "stock", label: "Stock", type: "number", required: true, min: "0" },
-    { id: "category", label: "Category", type: "text", required: true },
-    { id: "brand", label: "Brand", type: "text" },
-    { id: "company", label: "Company", type: "text", required: true },
-  ];
 
   return (
     <>
@@ -187,12 +204,20 @@ const EditProducts = ({ productId, initialSKU }) => {
         onClose={onEditClose}
         isDismissable={false}
         isKeyboardDismissDisabled={true}
-        backdrop="blur"
         scrollBehavior="outside"
+        size="3xl"
+        placement="center"
+        classNames={{
+          backdrop: "bg-[#292f46]/50 backdrop-opacity-40",
+          base: "border-[#292f46] bg-[#e3e3f6] dark:bg-[#19172c] text-[#a8b0d3]",
+          closeButton: "hover:bg-white/5 active:bg-white/10",
+        }}
       >
         <ModalContent>
           <form onSubmit={handleSubmit}>
-            <ModalHeader>Update Your Information</ModalHeader>
+            <ModalHeader className="text-violet-800">
+              Update Your Information
+            </ModalHeader>
             <ModalBody>
               {error && <div className="mb-4 text-red-500">{error}</div>}
               {success && (
@@ -200,52 +225,72 @@ const EditProducts = ({ productId, initialSKU }) => {
                   Product updated successfully!
                 </div>
               )}
-              {formFields.map(({ id, label, type, required, min, step, readOnly }) => (
-                <div className="mb-4" key={id}>
-                  <label
-                    htmlFor={id}
-                    className="block text-gray-700 font-bold mb-2"
-                  >
-                    {label}
-                  </label>
-                  {type === "textarea" ? (
-                    <Textarea
-                      id={id}
-                      name={id}
-                      label={label}
-                      value={formData[id]}
-                      onChange={handleChange}
-                      required={required}
-                    />
-                  ) : (
-                    <Input
-                      type={type}
-                      id={id}
-                      name={id}
-                      label={label}
-                      value={formData[id]}
-                      onChange={handleChange}
-                      required={required}
-                      min={min}
-                      step={step}
-                      readOnly={readOnly}  // Set readOnly attribute
-                    />
-                  )}
+              <div className="mb-4">
+                <label htmlFor="image" className="block text-gray-700 mb-2">
+                  Image
+                </label>
+                <div className="p-2 rounded-lg w-[300px] h-[150px] flex flex-col items-center justify-center bg-gray-300 cursor-pointer hover:bg-blue-200 active:bg-blue-200 relative">
+                  <input
+                    onChange={handleImageChange}
+                    name="image"
+                    type="file"
+                    accept="image/*"
+                    labelPlacement="outside"
+                    className="opacity-0 cursor-pointer absolute"
+                  />
+                  <FaImage className="text-purple-400 h-16 w-16" />
+                  <p className="text-sm">
+                    {imageFile
+                      ? imageFile.name
+                      : "Drag file here or click to upload"}
+                  </p>
                 </div>
-              ))}
+              </div>
+              {productfields.map(
+                ({ id, label, type, required, min, step, readOnly }) => (
+                  <div className="mb-2" key={id}>
+                    {type === "textarea" ? (
+                      <Textarea
+                        id={id}
+                        name={id}
+                        label={label}
+                        value={formData[id]}
+                        labelPlacement="outside"
+                        placeholder={id}
+                        onChange={handleChange}
+                        required={required}
+                      />
+                    ) : (
+                      <Input
+                        type={type}
+                        labelPlacement="outside"
+                        id={id}
+                        name={id}
+                        placeholder={id}
+                        label={label}
+                        value={formData[id]}
+                        onChange={handleChange}
+                        required={required}
+                        min={min}
+                        step={step}
+                        readOnly={readOnly} // Set readOnly attribute
+                      />
+                    )}
+                  </div>
+                )
+              )}
             </ModalBody>
             <ModalFooter>
-              <Button color="danger" variant="light" onPress={onEditClose}>
-                Close
-              </Button>
               <Button
                 type="submit"
-                variant="light"
-                color="primary"
                 disabled={loading}
                 loading={loading}
+                className="bg-[#6f4ef2] shadow-lg shadow-indigo-500/20"
               >
                 {loading ? "Submitting..." : "Update"}
+              </Button>
+              <Button color="foreground" variant="light" onPress={onEditClose}>
+                Close
               </Button>
             </ModalFooter>
           </form>

@@ -19,6 +19,8 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+
   const {
     isOpen: isEditOpen,
     onOpen: onEditOpen,
@@ -35,14 +37,14 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
     name: "",
     value: "",
     SKU: "", // Set SKU to initial value if provided
-    price: 0,
-    stock: 0,
+    price: "",
+    stock: "0",
     image: "",
-    weight: 0,
-    length: 0,
+    weight: "0",
+    length: "0",
     size: "",
-    width: 0,
-    height: 0,
+    width: "0",
+    height: "0",
     attributes: [],
     productId: productId || "",
   });
@@ -97,7 +99,6 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
     { label: "SKU", name: "SKU", type: "text", readOnly: true },
     { label: "Price", name: "price", type: "number", required: true },
     { label: "Stock", name: "stock", type: "number", required: true },
-    { label: "Image URL", name: "image", type: "text" },
     { label: "Weight", name: "weight", type: "number" },
     { label: "Size", name: "size", type: "text" },
     { label: "Length", name: "length", type: "number" },
@@ -114,49 +115,62 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
       // Generate barcode based on SKU and price
       const barcode = generateBarcodeValue(formData);
 
-      // Add barcode to form data
-      const formDataWithBarcode = {
-        ...formData,
-        barcode: barcode,
-      };
+      // Create a FormData object
+      const formDataWithBarcode = new FormData();
+      formDataWithBarcode.append('barcode', barcode);
+      formDataWithBarcode.append('name', formData.name);
+      formDataWithBarcode.append('value', formData.value);
+      formDataWithBarcode.append('SKU', formData.SKU);
+      formDataWithBarcode.append('price', formData.price);
+      formDataWithBarcode.append('stock', formData.stock);
+      if (formData.image) {
+        formDataWithBarcode.append('image', formData.image);
+      }
+      formDataWithBarcode.append('weight', formData.weight);
+      formDataWithBarcode.append('size', formData.size);
+      formDataWithBarcode.append('length', formData.length);
+      formDataWithBarcode.append('width', formData.width);
+      formDataWithBarcode.append('height', formData.height);
+      formDataWithBarcode.append('attributes', JSON.stringify(formData.attributes));
+      formDataWithBarcode.append('productId', productId || '');
 
       const response = await axios.put(
         `http://localhost:5000/api/variants/${variantId}`,
-        formDataWithBarcode
+        formDataWithBarcode,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
       );
-      console.log("Variant added:", response.data);
+      console.log('Variant added:', response.data);
       setSuccess(true);
-      toast.success("Variant Updated Successfully!", {
-        position: "top-center",
+      toast.success('Variant Updated Successfully!', {
+        position: 'top-center',
         autoClose: 3000,
         hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
-        theme: "light",
+        theme: 'light',
         transition: Bounce,
       });
-      setFormData({
-        name: "",
-        value: "",
-        SKU: "", // Reset SKU to empty after submission
-        price: 0,
-        stock: 0,
-        image: "",
-        weight: 0,
-        size: "",
-        length: 0,
-        width: 0,
-        height: 0,
-        attributes: [],
-        productId: productId || "",
-      });
-
-      // Close the modal after successful submission
-      onEditClose();
+      resetFormData();
+      onEditClose(); // Close the modal after successful submission
     } catch (error) {
-      setError("Failed to update variant");
+      setError('Failed to update variant');
+      toast.error('Failed to update variant', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'light',
+        transition: Bounce,
+      });
     } finally {
       setLoading(false);
     }
@@ -170,10 +184,11 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
     }));
 
     // Automatically generate SKU based on name, value, and size when any of these fields change
-    if (name === "name" || name === "value" || name === "size") {
+    if (name === 'name' || name === 'value' || name === 'size') {
       generateSKU(value);
     }
   };
+
   const generateSKU = (size) => {
     const { name, value } = formData;
     const nameSubstring = name.substring(0, 3).toUpperCase();
@@ -193,19 +208,59 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
 
     try {
       await axios.delete(`http://localhost:5000/api/variants/${variantId}`);
-      console.log("Variant deleted");
+      console.log('Variant deleted');
       setSuccess(true);
-      toast.success("Variant deleted successfully!", { transition: Slide });
-
-      onDeleteClose();
+      toast.success('Variant deleted successfully!', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'light',
+        transition: Slide,
+      });
+      resetFormData();
+      onDeleteClose(); // Close the modal after successful deletion
     } catch (error) {
-      setError("Failed to delete product");
-      toast.error("Failed to delete product!", { transition: Slide });
-      onDeleteClose();
+      setError('Failed to delete product');
+      toast.error('Failed to delete product', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: 'light',
+        transition: Slide,
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  const resetFormData = () => {
+    setFormData({
+      name: '',
+      value: '',
+      SKU: '',
+      price: 0,
+      stock: 0,
+      image: '',
+      weight: 0,
+      size: '',
+      length: 0,
+      width: 0,
+      height: 0,
+      attributes: [],
+      productId: productId || '',
+    });
+    setSuccess(false);
+    setError(null);
+  };
+
   return (
     <div>
       <Button
@@ -242,7 +297,26 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
               {error && <div className="mb-4 text-red-500">{error}</div>}
               {success && (
                 <div className="mb-4 text-green-500">
-                  Variant added successfully!
+                  Variant Updated successfully!
+                </div>
+              )}
+              <input
+                onChange={(e) => {
+                  setFormData({ ...formData, image: e.target.files[0] });
+                  setImageFile(e.target.files[0]);
+                }}
+                id="csvInput"
+                name="image"
+                type="file"
+                accept="image/*"
+              />
+              {imageFile && (
+                <div>
+                  <img
+                    src={URL.createObjectURL(imageFile)}
+                    alt="Preview"
+                    style={{ maxWidth: '100px', maxHeight: '100px' }}
+                  />
                 </div>
               )}
               {inputFields.map((field, index) => (
@@ -270,7 +344,7 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
                 disabled={loading}
                 loading={loading}
               >
-                {loading ? "Submitting..." : "Update"}
+                {loading ? 'Submitting...' : 'Update'}
               </Button>
             </ModalFooter>
           </form>
@@ -297,7 +371,7 @@ const EditVariants = ({ variantId, productId, generateBarcodeValue }) => {
               disabled={loading}
               loading={loading}
             >
-              {loading ? "Deleting..." : "Delete"}
+              {loading ? 'Deleting...' : 'Delete'}
             </Button>
           </ModalFooter>
         </ModalContent>
