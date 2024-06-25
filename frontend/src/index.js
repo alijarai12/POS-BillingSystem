@@ -4,14 +4,17 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { NextUIProvider } from "@nextui-org/react";
+import { Bounce, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { HashRouter } from "react-router-dom";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <NextUIProvider>
-      {" "}
-      <App />
-    </NextUIProvider>
+      <NextUIProvider>
+        <App />
+        <ToastContainer />
+      </NextUIProvider>{" "}
   </React.StrictMode>
 );
 

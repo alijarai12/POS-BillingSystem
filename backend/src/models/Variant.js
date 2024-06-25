@@ -1,8 +1,9 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
-const Product = require("./Product")
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+const Product = require("./Product"); // Import the Product model
+
 const Variant = sequelize.define(
-  'Variant',
+  "Variant",
   {
     variantId: {
       type: DataTypes.INTEGER,
@@ -14,12 +15,15 @@ const Variant = sequelize.define(
       allowNull: false,
       trim: true,
     },
-    value: {
+    color: {
       type: DataTypes.STRING,
       allowNull: false,
       trim: true,
     },
- 
+    expiryDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     size: {
       type: DataTypes.STRING,
       allowNull: true, // Ensure size is required
@@ -31,18 +35,32 @@ const Variant = sequelize.define(
       unique: false,
       trim: true,
     },
-    price: {
+    purchaseprice: {
       type: DataTypes.FLOAT,
       allowNull: false,
       validate: {
         min: 0,
       },
     },
-    discountedPrice: {
+    price: {
       type: DataTypes.FLOAT,
-      allowNull: true,
+      allowNull: false,
+      validate: {
+        min: 0,
+      },
+      discountedPrice: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
     },
     stock: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 0,
+      },
+    },
+    threshold: {
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
@@ -96,8 +114,8 @@ const Variant = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Product', // name of the related table
-        key: 'productId',
+        model: "Product", // name of the related table
+        key: "productId",
       },
     },
   },
@@ -109,14 +127,18 @@ const Variant = sequelize.define(
             const nameSubstring = variant.name.substring(0, 3).toUpperCase();
             const valueSubstring = variant.value.substring(0, 3).toUpperCase();
             const sizeSubstring = variant.size.substring(0, 2).toUpperCase(); // Assuming size is a string
-            const priceString = variant.price.toFixed(2).replace('.', '');
+            const priceString = variant.price.toFixed(2).replace(".", "");
 
             variant.SKU = `${nameSubstring}-${valueSubstring}-${sizeSubstring}-${priceString}`;
           }
 
           if (!variant.barcode) {
             // Generate barcode based on name, size, and price
-            const baseBarcode = `${variant.name.substring(0, 3).toUpperCase()}-${variant.size.substring(0, 2).toUpperCase()}-${variant.price.toFixed(2).replace('.', '')}`;
+            const baseBarcode = `${variant.name
+              .substring(0, 3)
+              .toUpperCase()}-${variant.size
+              .substring(0, 2)
+              .toUpperCase()}-${variant.price.toFixed(2).replace(".", "")}`;
             let barcode = baseBarcode;
 
             // Check if the generated barcode already exists, if so, append a number to make it unique
@@ -136,5 +158,95 @@ const Variant = sequelize.define(
   }
 );
 
-
 module.exports = Variant;
+
+// {
+//   hooks: {
+//     beforeSave: async (variant) => {
+//       try {
+//         const product = await Product.findByPk(variant.productId);
+//         if (product) {
+//           // Generate SKU: Brand-ProductType-VariantName-Color-Size
+//           variant.SKU = `${product.brand}-${variant.name}-${variant.value}-${variant.size}`;
+//         }
+//       } catch (error) {
+//         console.error("Error generating SKU for variant:", error);
+//       }
+//     },
+//   },
+//   toJSON: {
+//     transform: (doc, ret) => {
+//       delete ret.product; // Remove the `product` key from the response
+//       return ret;
+//     },
+//   },
+// }
+// {
+//   hooks: {
+//     beforeCreate: (variant) => {
+//       if (!variant.SKU) {
+//         const nameSubstring = variant.name.substring(0, 3).toUpperCase();
+//         const valueSubstring = variant.value.substring(0, 3).toUpperCase();
+//         const sizeSubstring = variant.size.substring(0, 2).toUpperCase(); // Assuming size is a string
+
+//         variant.SKU = `${nameSubstring}-${valueSubstring}-${sizeSubstring}-${variant.price.toFixed(2).replace('.', '')}`;
+//         // You can add any additional logic here to format the SKU as desired
+//       }
+//     },
+//   },
+// },
+// {
+//   hooks: {
+//     beforeCreate: async (variant) => {
+//       try {
+//         if (!variant.barcode) {
+//           const baseBarcode = `${variant.name.substring(0, 3).toUpperCase()}-${variant.size.substring(0, 2).toUpperCase()}`;
+//           let barcode = baseBarcode;
+
+//           // Check if the generated barcode already exists, if so, append a number to make it unique
+//           let count = 1;
+//           while (await Variant.findOne({ where: { barcode } })) {
+//             barcode = `${baseBarcode}-${count}`;
+//             count++;
+//           }
+
+//           variant.barcode = barcode;
+//         }
+//       } catch (error) {
+//         console.error("Error generating barcode for variant:", error);
+//       }
+//     },
+//   },
+// }
+// {
+//   hooks: {
+//     beforeCreate: async (variant) => {
+//       try {
+//         if (!variant.SKU) {
+//           const nameSubstring = variant.name.substring(0, 3).toUpperCase();
+//           const valueSubstring = variant.value.substring(0, 3).toUpperCase();
+//           const sizeSubstring = variant.size.substring(0, 2).toUpperCase(); // Assuming size is a string
+
+//           variant.SKU = `${nameSubstring}-${valueSubstring}-${sizeSubstring}-${variant.price.toFixed(2).replace('.', '')}`;
+//           // You can add any additional logic here to format the SKU as desired
+//         }
+
+//         if (!variant.barcode) {
+//           const baseBarcode = `${variant.name.substring(0, 3).toUpperCase()}-${variant.size.substring(0, 2).toUpperCase()}`;
+//           let barcode = baseBarcode;
+
+//           // Check if the generated barcode already exists, if so, append a number to make it unique
+//           let count = 1;
+//           while (await Variant.findOne({ where: { barcode } })) {
+//             barcode = `${baseBarcode}-${count}`;
+//             count++;
+//           }
+
+//           variant.barcode = barcode;
+//         }
+//       } catch (error) {
+//         console.error("Error generating SKU or barcode for variant:", error);
+//       }
+//     },
+//   },
+// }

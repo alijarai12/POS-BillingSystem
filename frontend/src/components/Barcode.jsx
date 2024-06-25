@@ -1,57 +1,62 @@
-import React, { useState } from 'react';
-import Barcode from 'react-barcode';
+
+import React, { useState, useRef } from "react";
+import ReactToPrint from "react-to-print";
+import Barcode from "react-barcode";
 
 const BarcodeGenerator = () => {
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [scannedBarcode, setScannedBarcode] = useState('');
+  const printRef = useRef();
+  const [selectedProducts, setSelectedProducts] = useState([]);
 
-  const handleSelectChange = (e) => {
-    const options = Array.from(e.target.selectedOptions, option => option.value);
-    setSelectedOptions(options);
-  };
+  const products = [
+    { name: "Product 1", code: "123456789012", stock: 5 },
+    { name: "Product 2", code: "987654321098", stock: 2 },
+    { name: "Product 3", code: "543210987654", stock: 10 },
+    // Add more products as needed
+  ];
 
-  const generateBarcode = () => {
-    const barcodeData = selectedOptions.join('-');
-    return <Barcode value={barcodeData} />;
-  };
-
-  const handleBarcodeScanned = (scannedData) => {
-    // Simulate accessing database based on scanned barcode
-    // Replace this with your actual database access logic
-    const productData = getProductDataFromDatabase(scannedData);
-    console.log('Product data:', productData);
-  };
-
-  const getProductDataFromDatabase = (barcode) => {
-    // This is a mock function, replace it with your actual database access code
-    // Here you can make a request to your backend API to fetch product data based on the scanned barcode
-    // For demonstration purposes, we'll return a mock product data object
-    return {
-      name: 'Product Name',
-      price: '$19.99',
-      description: 'Product description goes here...',
-    };
+  const handleCheckboxChange = (product) => {
+    setSelectedProducts((prevSelected) => {
+      if (prevSelected.includes(product)) {
+        return prevSelected.filter((p) => p !== product);
+      } else {
+        return [...prevSelected, product];
+      }
+    });
   };
 
   return (
     <div>
-      <select multiple onChange={handleSelectChange}>
-        <option value="option1">Option 1</option>
-        <option value="option2">Option 2</option>
-        <option value="option3">Option 3</option>
-      </select>
-      <button onClick={generateBarcode}>Generate Barcode</button>
-      {selectedOptions.length > 0 && generateBarcode()}
+      <h1>Product Barcodes</h1>
 
-      {/* Simulated barcode scanner */}
-      <div>
-        <label>Scan Barcode:</label>
-        <input
-          type="text"
-          value={scannedBarcode}
-          onChange={(e) => setScannedBarcode(e.target.value)}
-          onBlur={() => handleBarcodeScanned(scannedBarcode)}
-        />
+      <div style={{ marginBottom: "20px" }}>
+        {products.map((product) => (
+          <div key={product.code}>
+            <label>
+              <input
+                type="checkbox"
+                checked={selectedProducts.includes(product)}
+                onChange={() => handleCheckboxChange(product)}
+              />
+              {product.name} (Stock: {product.stock})
+            </label>
+          </div>
+        ))}
+      </div>
+
+      <ReactToPrint
+        trigger={() => <button>Print Barcodes</button>}
+        content={() => printRef.current}
+      />
+
+      <div ref={printRef}>
+        {selectedProducts.map((product) => (
+          <div key={product.code} style={{ marginBottom: "20px" }}>
+            <h3>
+              {product.name} (Stock: {product.stock})
+            </h3>
+            <Barcode value={product.code} width={1} height={40} />
+          </div>
+        ))}
       </div>
     </div>
   );

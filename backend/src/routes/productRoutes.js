@@ -1,15 +1,12 @@
 const express = require('express');
-const productController = require('../controllers/productController');
-const authenticateToken = require('../middleware/auth.js');
-const checkPermission = require('../middleware/grantPermission');
-
+const productController = require('../controllers/productControllers');
+const uploader = require("../middleware/multerMiddleware");
 
 const router = express.Router();
-
-router.post('/products', authenticateToken, checkPermission('Manage Product'), productController.createProduct);
-router.get('/products', authenticateToken, checkPermission('Manage Product'), productController.getAllProducts);
-router.get('/products/:id', authenticateToken, checkPermission('Manage Product'), productController.getProductById);
-router.put('/products/:id', authenticateToken, checkPermission('Manage Product'), productController.updateProduct);
-router.delete('/products/:id', authenticateToken, checkPermission('Manage Product'), productController.deleteProduct);
+router.post('/products', uploader.single("image"), productController.createProduct);
+router.get('/products', productController.getAllProducts);
+router.get('/products/:id', productController.getProductById);
+router.put('/products/:id', uploader.single("image"), productController.updateProduct);
+router.delete('/products/:id', productController.deleteProduct);
 
 module.exports = router;

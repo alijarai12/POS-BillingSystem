@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 
-const {nextui} = require("@nextui-org/react");
+const { nextui } = require("@nextui-org/react");
 
 module.exports = {
   content: [
@@ -9,8 +9,12 @@ module.exports = {
 
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        roboto: ["Roboto", "sans-serif"],
+      },
+    },
   },
   darkMode: "class",
   plugins: [nextui()],
-}
+};

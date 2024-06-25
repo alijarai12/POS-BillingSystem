@@ -11,10 +11,16 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@react-stately/data": "^3.11.4",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "fast-csv": "^5.0.1",
+    "json-2-csv": "^5.5.1",
+    "json2csv": "^6.0.0-alpha.2",
+    "multer": "^1.4.5-lts.1",
     
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
@@ -22,9 +28,11 @@
     "express-validator": "^7.1.0",
     "pg": "^8.11.5",
     "sequelize": "^6.37.3",
+    "uuid": "^9.0.1",
     "sequelize-cli": "^6.6.2"
   },
   "devDependencies": {
+    
     "nodemon": "^3.1.0",
     "sequelize-cli": "^6.6.2"
   }

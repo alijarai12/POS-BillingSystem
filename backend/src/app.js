@@ -22,15 +22,26 @@ const taxRoutes = require('./routes/taxRoutes');
 const productRoutes = require('./routes/productRoutes');
 const variantRoutes= require('./routes/variantRoutes');
 const discountRoutes= require('./routes/discountRoutes');
+const uploadRoutes= require("./routes/uploadRoutes")
+const expenseRoutes= require("./routes/expenseRoutes")
 const app = express();
+const path = require('path');
 
+// const storage= multer.diskStorage({
+//   destination: function(req, file, cb){
+//     cb(null,'./uploads')
+//   },
+//   filename: function(req, file, cb){
+//     cb(null, file.originalname)
+//   }
+// })
+// const upload= multer({storage})
 // Middleware
 app.use(cors());
 
 
 // Parse JSON request body
 app.use(express.json());
-
 
 // Use routes
 app.use('/auth/role', roleRoutes);
@@ -46,7 +57,9 @@ app.use('/api', taxRoutes);
 app.use('/api', productRoutes);
 app.use('/api',variantRoutes);
 app.use('/api',discountRoutes);
-
+app.use("/api", uploadRoutes);
+app.use('/api', expenseRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 app.get('/auth/grant-permission', authenticateToken, async (req, res) => {
@@ -92,21 +105,23 @@ app.get('/auth/grant-permission', authenticateToken, async (req, res) => {
 
 
 // Sample function
-app.get('/', (req, res) => {
-    res.send('Hello, world!');
+app.get("/", (req, res) => {
+  res.send("Hello, world!");
 });
 
-
-app.get('/user', async (req, res) => {
-  try{
-    const users = await pool.query('SELECT * FROM users');
+// app.post("/api/upload", upload.single("file"), (req, res) => {
+//   res.json(req.file);
+// });
+app.get("/user", async (req, res) => {
+  try {
+    const users = await pool.query("SELECT * FROM users");
     res.status(200).json(users.rows);
   } catch (error) {
-    console.error('Error fetching users', error);
-    res.status(500).json({ message: 'Internal server error', error: error.message });
+    console.error("Error fetching users", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 });
-
-
 
 module.exports = app;
